@@ -36,6 +36,7 @@ executables:
     - wonsz
     - servant-server >= 0.16 && < 0.17
     - warp >= 3.2 && < 3.3
+    - optparse-applicative >= 0.14 && < 0.15
 
 tests:
   wonsz-test:
