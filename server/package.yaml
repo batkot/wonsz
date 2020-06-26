@@ -25,7 +25,7 @@ library:
   source-dirs: src
 
 executables:
-  wonsz-exe:
+  wonsz-server:
     main:                Main.hs
     source-dirs:         app
     ghc-options:
@@ -34,6 +34,8 @@ executables:
     - -with-rtsopts=-N
     dependencies:
     - wonsz
+    - servant-server >= 0.16 && < 0.17
+    - warp >= 3.2 && < 3.3
 
 tests:
   wonsz-test:
