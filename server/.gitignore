@@ -1,0 +1,4 @@
+.stack-work/
+wonsz.cabal
+stack.yaml.lock
+*~
