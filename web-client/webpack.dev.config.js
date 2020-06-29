@@ -85,7 +85,7 @@ module.exports = {
             filename: 'index.html'
         }),
         new Webpack.DefinePlugin({
-            __API_URL__: "'/api'"
+            __API_URL__: "'https://localhost:8080/api'"
         })
     ],
     devServer: {

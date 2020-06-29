@@ -2,6 +2,7 @@ require('./static/theme.scss');
 
 const { Elm } = require('./Main.elm');
 const env = require('./environment.js');
+env.authToken = null;
 
 const initSettings = 
     { 
