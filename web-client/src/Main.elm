@@ -24,6 +24,9 @@ type alias Environment =
     , authToken : Maybe String
     }
 
+setAuthToken : Environment -> String -> Environment
+setAuthToken env token = { env | authToken = Just token }
+
 init : Environment -> (AppModel, Cmd Command)
 init env = 
     let model = case env.authToken of 
@@ -34,9 +37,12 @@ init env =
 update : Command -> AppModel -> (AppModel, Cmd Command)
 update cmd app = 
     case (cmd, app.model) of 
-        (Login loginCmd, Anonymous loginData) -> Login.update app.env.apiUrl loginCmd loginData
-            |> Tuple.mapBoth Anonymous (Cmd.map Login)
-            |> Tuple.mapFirst (\m -> { app | model = m })
+        (Login loginCmd, Anonymous loginData) -> 
+            case loginCmd of 
+                Login.LoggedIn authToken -> ( { app | model = Authorized (AuthorizedModel authToken) }, Cmd.none)
+                _ -> Login.update app.env.apiUrl loginCmd loginData
+                    |> Tuple.mapBoth Anonymous (Cmd.map Login)
+                    |> Tuple.mapFirst (\m -> { app | model = m })
         (_, _) -> (app, Cmd.none)
 
 type alias AppModel = 
@@ -60,11 +66,12 @@ view : AppModel -> Html Command
 view app = 
     case app.model of
         Anonymous loginData -> Html.map Login (Login.view loginData)
-        Authorized authorized -> loggedView 
+        Authorized authorized -> loggedView authorized
 
-loggedView : Html a
-loggedView  = div 
+loggedView : AuthorizedModel -> Html a
+loggedView  model = div 
     [ class "elm-container" ]
-    [ img [ src elmLogoUrl ] []
+    [ text model.authToken
+    , img [ src elmLogoUrl ] []
     , text "Elm 0.19 Webpack4 Starter" 
     ]

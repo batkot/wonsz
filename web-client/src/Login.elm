@@ -11,6 +11,7 @@ import Html.Attributes exposing (class, placeholder, type_, value, style)
 import Html.Events exposing (onInput, onClick)
 
 import Http
+import Task
 import Json.Encode as JE
 
 type LoginCmd 
@@ -21,11 +22,12 @@ type LoginCmdInternal
     = UserNameChanged String
     | PasswordChanged String
     | LoginRequested 
-    | LoginSucceded (Result Http.Error String)
+    | LoginResult (Result Http.Error String)
 
 type alias LoginData =
     { user : String
     , password : String
+    , failed : Bool
     }
 
 encodeLoginData : LoginData -> JE.Value
@@ -35,11 +37,10 @@ encodeLoginData loginData =
         , ("password", JE.string loginData.password)
         ]
 
-
 type alias LoginUrl = String
 
 emptyModel : LoginData
-emptyModel = LoginData "" ""
+emptyModel = LoginData "" "" False
 
 update : LoginUrl -> LoginCmd -> LoginData -> (LoginData, Cmd LoginCmd)
 update loginUrl cmd model = 
@@ -53,34 +54,40 @@ updateInternal loginUrl cmd model =
         UserNameChanged userName -> ( { model | user = userName }, Cmd.none )
         PasswordChanged password -> ( { model | password = password }, Cmd.none )
         LoginRequested -> (model, requestLogin loginUrl model)
-        LoginSucceded token -> (model, Cmd.none)
+        LoginResult (Ok authToken) -> (model, Task.perform LoggedIn (Task.succeed authToken))
+        LoginResult (Err _) -> ({ model | failed = True }, Cmd.none)
 
 requestLogin : LoginUrl -> LoginData -> Cmd LoginCmd
 requestLogin loginUrl loginData = 
     Http.post
         { url = loginUrl
         , body = Http.jsonBody (encodeLoginData loginData)
-        , expect = Http.expectString (LoginSucceded >> Internal)
+        , expect = Http.expectString (LoginResult >> Internal)
         }
 
 view : LoginData -> Html LoginCmd
 view loginData = 
-    div [ class "login-form" ]
-        [ input 
-            [ type_ "text"
-            , style "display" "block"
-            , placeholder "Username"
-            , value loginData.user
-            , onInput (UserNameChanged >> Internal) ]
-            []
-        , input 
-            [ type_ "password"
-            , style "display" "block"
-            , placeholder "Password"
-            , value loginData.password
-            , onInput (PasswordChanged >> Internal) ] 
-            []
-        , div 
-            [ onClick (Internal LoginRequested)]
-            [ text "Login" ]
-        ]
+    let
+        error = if loginData.failed then div [] [text "Login failed!"] else div [] [] 
+    in
+        div [ class "login-form" ]
+            [ input 
+                [ type_ "text"
+                , style "display" "block"
+                , placeholder "Username"
+                , value loginData.user
+                , onInput (UserNameChanged >> Internal) ]
+                []
+            , input 
+                [ type_ "password"
+                , style "display" "block"
+                , placeholder "Password"
+                , value loginData.password
+                , onInput (PasswordChanged >> Internal) ] 
+                []
+            , div 
+                [ class "login-btn"
+                , onClick (Internal LoginRequested)]
+                [ text "Login" ]
+            , error
+            ]
