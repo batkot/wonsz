@@ -13,6 +13,7 @@ import Html.Events exposing (onInput, onClick)
 import Http
 import Task
 import Json.Encode as JE
+import Json.Decode as JD
 
 type LoginCmd 
     = Internal LoginCmdInternal
@@ -62,7 +63,7 @@ requestLogin loginUrl loginData =
     Http.post
         { url = loginUrl
         , body = Http.jsonBody (encodeLoginData loginData)
-        , expect = Http.expectString (LoginResult >> Internal)
+        , expect = Http.expectJson (LoginResult >> Internal) JD.string
         }
 
 view : LoginData -> Html LoginCmd
