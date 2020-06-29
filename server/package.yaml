@@ -36,6 +36,8 @@ executables:
     - wonsz
     - servant-server >= 0.16 && < 0.17
     - warp >= 3.2 && < 3.3
+    - wai-cors >= 0.2 && < 0.3
+    - aeson >= 1.4 && < 1.6
     - optparse-applicative >= 0.14 && < 0.15
 
 tests:
