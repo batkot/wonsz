@@ -2,7 +2,7 @@ module Main exposing (main)
 
 import Browser
 
-import LocalStorage 
+import LocalStorage as LS
 import Login
 
 import Html exposing (Html, text, img, div)
@@ -24,9 +24,6 @@ type alias Environment =
     , authToken : Maybe String
     }
 
-setAuthToken : Environment -> String -> Environment
-setAuthToken env token = { env | authToken = Just token }
-
 init : Environment -> (AppModel, Cmd Command)
 init env = 
     let model = case env.authToken of 
@@ -39,7 +36,9 @@ update cmd app =
     case (cmd, app.model) of 
         (Login loginCmd, Anonymous loginData) -> 
             case loginCmd of 
-                Login.LoggedIn authToken -> ( { app | model = Authorized (AuthorizedModel authToken) }, Cmd.none)
+                Login.LoggedIn authToken -> 
+                    ( { app | model = Authorized (AuthorizedModel authToken) }
+                    , LS.storeString "AuthToken" authToken)
                 _ -> Login.update app.env.apiUrl loginCmd loginData
                     |> Tuple.mapBoth Anonymous (Cmd.map Login)
                     |> Tuple.mapFirst (\m -> { app | model = m })

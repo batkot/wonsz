@@ -1,10 +1,17 @@
-port module LocalStorage exposing (store, setLocalStorageKey)
+port module LocalStorage exposing 
+    ( store
+    , storeString
+    , setLocalStorageKey
+    )
 
 import Json.Encode as JE
 
-type Key = String
+type alias Key = String
 
-store : (a -> JE.Value) -> String -> a -> Cmd msg
+store : (a -> JE.Value) -> Key -> a -> Cmd msg
 store encode k v = setLocalStorageKey (k, encode v)
+
+storeString : Key -> String -> Cmd msg
+storeString key = store JE.string key
 
 port setLocalStorageKey : (String, JE.Value) -> Cmd msg
