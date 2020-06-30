@@ -22,7 +22,7 @@ type LoginCmd
 type LoginCmdInternal 
     = UserNameChanged String
     | PasswordChanged String
-    | LoginRequested 
+    | RequestLogin 
     | LoginResult (Result Http.Error String)
 
 type alias LoginData =
@@ -54,7 +54,7 @@ updateInternal loginUrl cmd model =
     case cmd of
         UserNameChanged userName -> ( { model | user = userName }, Cmd.none )
         PasswordChanged password -> ( { model | password = password }, Cmd.none )
-        LoginRequested -> (model, requestLogin loginUrl model)
+        RequestLogin -> (model, requestLogin loginUrl model)
         LoginResult (Ok authToken) -> (model, Task.perform LoggedIn (Task.succeed authToken))
         LoginResult (Err _) -> ({ model | failed = True }, Cmd.none)
 
@@ -88,7 +88,7 @@ view loginData =
                 []
             , div 
                 [ class "login-btn"
-                , onClick (Internal LoginRequested)]
+                , onClick (Internal RequestLogin)]
                 [ text "Login" ]
             , error
             ]

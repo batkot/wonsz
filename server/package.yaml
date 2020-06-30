@@ -35,6 +35,10 @@ executables:
     dependencies:
     - wonsz
     - servant-server >= 0.16 && < 0.17
+    - servant-auth >= 0.3 && < 0.4
+    - servant-auth-server >= 0.4 && < 0.5
+    - jose >= 0.8 && < 0.9
+    - utf8-string >= 1.0 && < 1.1
     - warp >= 3.2 && < 3.3
     - wai-cors >= 0.2 && < 0.3
     - aeson >= 1.4 && < 1.6
