@@ -8,6 +8,8 @@ import Login
 import Html exposing (Html, text, img, div)
 import Html.Attributes exposing (src, class)
 
+import Http 
+
 import Assets exposing (elmLogoUrl)
 
 main : Program Environment AppModel Command
@@ -38,8 +40,11 @@ update cmd app =
             case loginCmd of 
                 Login.LoggedIn authToken -> 
                     ( { app | model = Authorized (AuthorizedModel authToken) }
-                    , LS.storeString "AuthToken" authToken)
-                _ -> Login.update app.env.apiUrl loginCmd loginData
+                    , Cmd.batch 
+                        [ LS.storeString "AuthToken" authToken
+                        , authHttpTest (AuthorizedModel authToken) (makeApiUrl app.env "/overview")
+                        ])
+                _ -> Login.update (makeApiUrl app.env "/login") loginCmd loginData
                     |> Tuple.mapBoth Anonymous (Cmd.map Login)
                     |> Tuple.mapFirst (\m -> { app | model = m })
         (_, _) -> (app, Cmd.none)
@@ -57,9 +62,24 @@ type alias AuthorizedModel =
     { authToken : String
     }
 
+makeApiUrl : Environment -> String -> String
+makeApiUrl env path = env.apiUrl ++ path
+
+authHttpTest : AuthorizedModel -> String -> Cmd Command
+authHttpTest authModel url =
+    Http.request 
+        { method = "GET"
+        , headers = [ Http.header "Authorization" ("Bearer " ++ authModel.authToken)]
+        , url = url
+        , body = Http.emptyBody
+        , expect = Http.expectString Command
+        , timeout = Nothing
+        , tracker = Nothing
+        }
+
 type Command 
     = Login Login.LoginCmd
-    | Command
+    | Command (Result Http.Error String)
 
 view : AppModel -> Html Command
 view app = 

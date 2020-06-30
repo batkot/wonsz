@@ -36,6 +36,7 @@ data LoginData = LoginData
 instance FromJSON LoginData
 instance ToJSON LoginData
 
+
 type AuthenticationApi = "login" :> ReqBody '[JSON] LoginData :> Post '[JSON] String
 
 type WonszApi = "overview" :> Get '[JSON] String

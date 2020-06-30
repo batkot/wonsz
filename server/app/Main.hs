@@ -28,7 +28,7 @@ runServer opt = do
 
 createCorsPolicy :: Maybe String -> CorsResourcePolicy 
 createCorsPolicy origin = 
-    simpleCorsResourcePolicy { corsRequestHeaders = [ "content-type" ], corsOrigins = corsOrigin <$> origin }
+    simpleCorsResourcePolicy { corsRequestHeaders = [ "authorization", "content-type" ], corsOrigins = corsOrigin <$> origin }
   where
     corsOrigin allowedOrigin = ([fromString allowedOrigin], True) 
 
