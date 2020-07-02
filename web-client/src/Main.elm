@@ -62,9 +62,11 @@ type alias AuthorizedModel =
     { authToken : String
     }
 
+
 makeApiUrl : Environment -> String -> String
 makeApiUrl env path = env.apiUrl ++ path
 
+-- This goes to separate module with Auth info?
 authHttpTest : AuthorizedModel -> String -> Cmd Command
 authHttpTest authModel url =
     Http.request 

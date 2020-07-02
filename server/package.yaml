@@ -39,10 +39,12 @@ executables:
     - servant-auth-server >= 0.4 && < 0.5
     - jose >= 0.8 && < 0.9
     - utf8-string >= 1.0 && < 1.1
+    - time >= 1.8 && < 2.0
     - warp >= 3.2 && < 3.3
     - wai-cors >= 0.2 && < 0.3
     - aeson >= 1.4 && < 1.6
     - optparse-applicative >= 0.14 && < 0.15
+    - mtl >= 2.2 && < 3.0
 
 tests:
   wonsz-test:
