@@ -62,7 +62,6 @@ type alias AuthorizedModel =
     { authToken : String
     }
 
-
 makeApiUrl : Environment -> String -> String
 makeApiUrl env path = env.apiUrl ++ path
 
