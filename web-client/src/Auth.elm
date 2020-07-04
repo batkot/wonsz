@@ -1,32 +1,20 @@
 module Auth exposing
-    ( Session
-    , newSession
-    , authUser
-
-    , AuthSession
+    ( AuthSession
     , createAuthHeader
+    , user
 
     , UserDescription
     , userName
 
+    , TokenString
     , parseToken
     )
-
--- Auth responsibilities:
--- Handle logged user
--- Store Auth Token
--- Parse JWT Token
 
 import Http
 import Json.Decode as JD
 import Json.Decode.Pipeline as JDP
-
-type Session 
-    = Anonymous
-    | Authenticated AuthSession
-
-newSession : Session
-newSession = Anonymous
+import Jwt
+import Result
 
 type AuthToken = AuthToken String
 
@@ -36,33 +24,42 @@ unwrapToken (AuthToken t) = t
 type alias TokenString = String
 
 parseToken : TokenString -> Maybe AuthSession
-parseToken tokenString = Nothing
+parseToken tokenString =
+    let
+        decoder = JD.field "dat" userDescriptionDecoder
+    in
+        Jwt.decodeToken decoder tokenString
+        |> Result.map (\usr -> AuthSession
+            { authToken = AuthToken tokenString
+            , userData =  usr
+            })
+        |> Result.toMaybe
 
 type AuthSession = AuthSession
     { authToken : AuthToken
     , userData : UserDescription
     }
 
+user : AuthSession -> UserDescription
+user (AuthSession session) = session.userData
+
 createAuthHeader : AuthSession -> Http.Header
 createAuthHeader (AuthSession session) = "Bearer " ++ unwrapToken session.authToken
     |> Http.header "Authorization" 
 
-authUser : Session -> Maybe UserDescription
-authUser session = case session of
-    Anonymous -> Nothing
-    Authenticated (AuthSession authSession) -> Just authSession.userData
-        
-type UserDescription = UserDescription
+type UserDescription = UserDescription UserData
+
+type alias UserData =
     { id : Int
     , userName : String
     }
 
 userName : UserDescription -> String
-userName (UserDescription user) = user.userName
+userName (UserDescription u) = u.userName
 
 userDescriptionDecoder : JD.Decoder UserDescription
 userDescriptionDecoder = 
-    JD.succeed UserDescription
-    |> JDP.required "id" JD.int
-    |> JDP.required "username" JD.string
-
+    JD.succeed UserData
+    |> JDP.required "auId" JD.int
+    |> JDP.required "name" JD.string
+    |> JD.map UserDescription
