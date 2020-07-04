@@ -25,7 +25,7 @@ login username password =
             [ ("user", JE.string username)
             , ("password", JE.string password)]
             |> jsonBody
-    in makeRequest (Url "http://localhost:8080/login") Post JD.string loginBody
+    in makeRequest (Url "/login") Post JD.string loginBody
 
 type alias OverviewDto =
     { something : String
@@ -38,5 +38,5 @@ overviewDtoDecoder =
 
 overview : Authorized OverviewDto
 overview = 
-    makeRequest (Url "http://localhost:8080/overview") Get overviewDtoDecoder emptyBody
+    makeRequest (Url "/overview") Get overviewDtoDecoder emptyBody
     |> authorize

@@ -32,24 +32,24 @@ type alias LoginData =
 emptyModel : LoginData
 emptyModel = LoginData "" "" False
 
-update : LoginCmd -> LoginData -> (LoginData, Cmd LoginCmd)
-update cmd model = 
+update : HE.Url -> LoginCmd -> LoginData -> (LoginData, Cmd LoginCmd)
+update apiUrl cmd model = 
     case cmd of 
-        Internal internal -> updateInternal internal model
+        Internal internal -> updateInternal apiUrl internal model
         LoggedIn _ -> ( model, Cmd.none)
 
-updateInternal : LoginCmdInternal -> LoginData -> (LoginData, Cmd LoginCmd)
-updateInternal cmd model =
+updateInternal : HE.Url -> LoginCmdInternal -> LoginData -> (LoginData, Cmd LoginCmd)
+updateInternal apiUrl cmd model =
     case cmd of
         UserNameChanged userName -> ( { model | user = userName }, Cmd.none )
         PasswordChanged password -> ( { model | password = password }, Cmd.none )
-        RequestLogin -> (model, requestLogin model)
+        RequestLogin -> (model, requestLogin apiUrl model)
         LoginFailed _ -> ({ model | failed = True }, Cmd.none)
 
-requestLogin : LoginData -> Cmd LoginCmd
-requestLogin loginData = 
+requestLogin : HE.Url -> LoginData -> Cmd LoginCmd
+requestLogin apiUrl loginData = 
     Api.login loginData.user loginData.password
-    |> HE.execute 
+    |> HE.execute apiUrl
     |> Cmd.map (Result.map LoggedIn >> Result.withDefault (Internal (LoginFailed "Dupa")))
 
 view : LoginData -> Html LoginCmd

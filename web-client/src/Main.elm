@@ -16,7 +16,7 @@ import Http.Extra as HE
 
 import Assets exposing (elmLogoUrl)
 
-main : Program Environment AppModel Command
+main : Program Options AppModel Command
 main = 
     Browser.element
         { init = init
@@ -25,18 +25,27 @@ main =
         , subscriptions = always Sub.none
         }
 
-type alias Environment =
+type alias Options =
     { apiUrl : String
     , authToken : Maybe String
     }
 
-init : Environment -> (AppModel, Cmd Command)
-init env = 
-    let authSession = Maybe.andThen Auth.parseToken env.authToken
+type alias Environment = HasApiUrl {}
+
+type alias HasApiUrl a =
+    { a | apiUrl : HE.Url}
+
+init : Options -> (AppModel, Cmd Command)
+init opt = 
+    let authSession = Maybe.andThen Auth.parseToken opt.authToken
         model = case authSession of 
             Nothing -> Anonymous Login.emptyModel
             Just session -> Authorized <| AuthorizedModel session
+        env = createEnv opt
     in (AppModel env model, Cmd.none)
+
+createEnv : Options -> Environment
+createEnv opt = { apiUrl = HE.Url opt.apiUrl }
 
 update : Command -> AppModel -> (AppModel, Cmd Command)
 update cmd app = 
@@ -50,10 +59,10 @@ update cmd app =
                         Just session -> ( { app | model = Authorized (AuthorizedModel session) }
                                         , Cmd.batch
                                             [ LS.storeString "AuthToken" authToken
-                                            , authHttpTest session
+                                            , authHttpTest app.env session
                                             ])
 
-                _ -> Login.update loginCmd loginData
+                _ -> Login.update app.env.apiUrl loginCmd loginData
                     |> Tuple.mapBoth Anonymous (Cmd.map Login)
                     |> Tuple.mapFirst (\m -> { app | model = m })
         (_, _) -> (app, Cmd.none)
@@ -71,14 +80,11 @@ type alias AuthorizedModel =
     { authSession : Auth.AuthSession
     }
 
-makeApiUrl : Environment -> String -> String
-makeApiUrl env path = env.apiUrl ++ path
-
 -- This goes to separate module with Auth info?
-authHttpTest : Auth.AuthSession -> Cmd Command
-authHttpTest session =
+authHttpTest : HasApiUrl env -> Auth.AuthSession -> Cmd Command
+authHttpTest { apiUrl } session =
     Api.overview session
-    |> HE.execute
+    |> HE.execute apiUrl
     |> Cmd.map Command
 
 type Command 

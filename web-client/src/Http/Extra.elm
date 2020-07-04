@@ -34,11 +34,11 @@ httpMethodToString m =
         Post -> "POST"
         Delete -> "DELETE"
 
-execute : HttpRequest a -> Cmd (Result Http.Error a)
-execute (HttpRequest req) = 
+execute : Url -> HttpRequest a -> Cmd (Result Http.Error a)
+execute (Url baseUrl) (HttpRequest req) = 
     Http.request 
         { method = httpMethodToString req.method
-        , url = unUrl req.url
+        , url = baseUrl ++ unUrl req.url
         , headers = req.headers
         , body = req.body
         , expect = Http.expectJson identity req.responseDecoder
