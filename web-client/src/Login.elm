@@ -10,10 +10,8 @@ import Html exposing (Html, div, input, text)
 import Html.Attributes exposing (class, placeholder, type_, value, style)
 import Html.Events exposing (onInput, onClick)
 
-import Http
-import Task
-import Json.Encode as JE
-import Json.Decode as JD
+import IO.Api as Api
+import Http.Extra as HE
 
 type LoginCmd 
     = Internal LoginCmdInternal
@@ -23,7 +21,7 @@ type LoginCmdInternal
     = UserNameChanged String
     | PasswordChanged String
     | RequestLogin 
-    | LoginResult (Result Http.Error String)
+    | LoginFailed String
 
 type alias LoginData =
     { user : String
@@ -31,40 +29,28 @@ type alias LoginData =
     , failed : Bool
     }
 
-encodeLoginData : LoginData -> JE.Value
-encodeLoginData loginData = 
-    JE.object
-        [ ("user", JE.string loginData.user)
-        , ("password", JE.string loginData.password)
-        ]
-
-type alias LoginUrl = String
-
 emptyModel : LoginData
 emptyModel = LoginData "" "" False
 
-update : LoginUrl -> LoginCmd -> LoginData -> (LoginData, Cmd LoginCmd)
-update loginUrl cmd model = 
+update : LoginCmd -> LoginData -> (LoginData, Cmd LoginCmd)
+update cmd model = 
     case cmd of 
-        Internal internal -> updateInternal loginUrl internal model
+        Internal internal -> updateInternal internal model
         LoggedIn _ -> ( model, Cmd.none)
 
-updateInternal : LoginUrl -> LoginCmdInternal -> LoginData -> (LoginData, Cmd LoginCmd)
-updateInternal loginUrl cmd model =
+updateInternal : LoginCmdInternal -> LoginData -> (LoginData, Cmd LoginCmd)
+updateInternal cmd model =
     case cmd of
         UserNameChanged userName -> ( { model | user = userName }, Cmd.none )
         PasswordChanged password -> ( { model | password = password }, Cmd.none )
-        RequestLogin -> (model, requestLogin loginUrl model)
-        LoginResult (Ok authToken) -> (model, Task.perform LoggedIn (Task.succeed authToken))
-        LoginResult (Err _) -> ({ model | failed = True }, Cmd.none)
+        RequestLogin -> (model, requestLogin model)
+        LoginFailed _ -> ({ model | failed = True }, Cmd.none)
 
-requestLogin : LoginUrl -> LoginData -> Cmd LoginCmd
-requestLogin loginUrl loginData = 
-    Http.post
-        { url = loginUrl
-        , body = Http.jsonBody (encodeLoginData loginData)
-        , expect = Http.expectJson (LoginResult >> Internal) JD.string
-        }
+requestLogin : LoginData -> Cmd LoginCmd
+requestLogin loginData = 
+    Api.login loginData.user loginData.password
+    |> HE.execute 
+    |> Cmd.map (Result.map LoggedIn >> Result.withDefault (Internal (LoginFailed "Dupa")))
 
 view : LoginData -> Html LoginCmd
 view loginData = 

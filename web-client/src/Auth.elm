@@ -1,6 +1,5 @@
 module Auth exposing
     ( AuthSession
-    , createAuthHeader
     , user
 
     , UserDescription
@@ -8,9 +7,14 @@ module Auth exposing
 
     , TokenString
     , parseToken
+
+    , Requires
+    , authorize
     )
 
 import Http
+import Http.Extra as HE
+
 import Json.Decode as JD
 import Json.Decode.Pipeline as JDP
 import Jwt
@@ -43,10 +47,6 @@ type AuthSession = AuthSession
 user : AuthSession -> UserDescription
 user (AuthSession session) = session.userData
 
-createAuthHeader : AuthSession -> Http.Header
-createAuthHeader (AuthSession session) = "Bearer " ++ unwrapToken session.authToken
-    |> Http.header "Authorization" 
-
 type UserDescription = UserDescription UserData
 
 type alias UserData =
@@ -63,3 +63,15 @@ userDescriptionDecoder =
     |> JDP.required "auId" JD.int
     |> JDP.required "name" JD.string
     |> JD.map UserDescription
+
+-- Authorize 
+type alias Requires auth res = auth -> res
+
+authorize : HE.HttpRequest a -> Requires AuthSession (HE.HttpRequest a)
+authorize req auth = 
+    let authHeader = createAuthHeader auth
+    in HE.addHeader authHeader req
+
+createAuthHeader : AuthSession -> Http.Header
+createAuthHeader (AuthSession session) = "Bearer " ++ unwrapToken session.authToken
+    |> Http.header "Authorization" 
