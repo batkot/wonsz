@@ -1,6 +1,7 @@
 module Login exposing 
-    ( LoginCmd(..)
+    ( LoginCmd
     , LoginData
+
     , emptyModel
     , update
     , view
@@ -14,18 +15,18 @@ import Html.Extra exposing (enter, onKey)
 import Result.Extra as RE
 
 import IO.Api as Api
+
 import Http
 import Http.Extra as HE
 
-type LoginCmd 
-    = Internal LoginCmdInternal
-    | LoggedIn String
+import Auth
 
-type LoginCmdInternal 
+type LoginCmd
     = UserNameChanged String
     | PasswordChanged String
     | RequestLogin 
     | LoginFailed String
+    | LoggedIn String
 
 type alias LoginData =
     { user : String
@@ -36,19 +37,22 @@ type alias LoginData =
 emptyModel : LoginData
 emptyModel = LoginData "" "" ""
 
-update : HE.Url -> LoginCmd -> LoginData -> (LoginData, Cmd LoginCmd)
-update apiUrl cmd model = 
-    case cmd of 
-        Internal internal -> updateInternal apiUrl internal model
-        LoggedIn _ -> ( model, Cmd.none)
-
-updateInternal : HE.Url -> LoginCmdInternal -> LoginData -> (LoginData, Cmd LoginCmd)
-updateInternal apiUrl cmd model =
+update : HE.Url -> LoginCmd -> LoginData -> (LoginData , Cmd LoginCmd)
+update apiUrl cmd model =
     case cmd of
-        UserNameChanged userName -> ( { model | user = userName }, Cmd.none )
-        PasswordChanged password -> ( { model | password = password }, Cmd.none )
-        RequestLogin -> (model, requestLogin apiUrl model)
-        LoginFailed err -> ({ model | failMessage = err }, Cmd.none)
+        UserNameChanged userName -> 
+            ( { model | user = userName }, Cmd.none )
+        PasswordChanged password -> 
+            ( { model | password = password }, Cmd.none )
+        RequestLogin -> 
+            ( model, requestLogin apiUrl model)
+        LoginFailed err -> 
+            ( { model | failMessage = err }, Cmd.none)
+        LoggedIn token -> 
+            let c = Auth.authenticate token
+                    |> Maybe.map Tuple.second
+                    |> Maybe.withDefault Cmd.none
+            in (model, c)
 
 requestLogin : HE.Url -> LoginData -> Cmd LoginCmd
 requestLogin apiUrl loginData = 
@@ -56,8 +60,8 @@ requestLogin apiUrl loginData =
             Http.BadStatus s -> if s == 401 then "Bad credentials" else HE.httpErrorToMessage (Http.BadStatus s)
             x -> HE.httpErrorToMessage x
     in Api.login loginData.user loginData.password
-    |> HE.execute apiUrl
-    |> Cmd.map (RE.unpack (errorMap >> LoginFailed >> Internal) LoggedIn)
+        |> HE.execute apiUrl
+        |> Cmd.map (RE.unpack (errorMap >> LoginFailed) LoggedIn)
 
 view : LoginData -> Html LoginCmd
 view loginData = 
@@ -70,20 +74,20 @@ view loginData =
                 , style "display" "block"
                 , placeholder "Username"
                 , value loginData.user
-                , onInput (UserNameChanged >> Internal) 
-                , onKey enter (Internal RequestLogin) ] 
+                , onInput UserNameChanged
+                , onKey enter RequestLogin ] 
                 []
             , input 
                 [ type_ "password"
                 , style "display" "block"
                 , placeholder "Password"
                 , value loginData.password
-                , onInput (PasswordChanged >> Internal)
-                , onKey enter (Internal RequestLogin) ] 
+                , onInput PasswordChanged
+                , onKey enter RequestLogin ] 
                 []
             , div 
                 [ class "login-btn"
-                , onClick (Internal RequestLogin)]
+                , onClick RequestLogin ]
                 [ text "Login" ]
             , error
             ]

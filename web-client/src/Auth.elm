@@ -1,5 +1,6 @@
 module Auth exposing
     ( AuthSession
+    , HasAuthSession
     , user
 
     , UserDescription
@@ -10,15 +11,23 @@ module Auth exposing
 
     , Requires
     , authorize
+
+    -- Token Management
+    , authenticate
+    , logout
     )
 
 import Http
 import Http.Extra as HE
 
+import IO.LocalStorage as LS
+
 import Json.Decode as JD
 import Json.Decode.Pipeline as JDP
 import Jwt
 import Result
+
+type alias HasAuthSession a = { a | authSession : AuthSession }
 
 type AuthToken = AuthToken String
 
@@ -29,10 +38,8 @@ type alias TokenString = String
 
 parseToken : TokenString -> Maybe AuthSession
 parseToken tokenString =
-    let
-        decoder = JD.field "dat" userDescriptionDecoder
-    in
-        Jwt.decodeToken decoder tokenString
+    let decoder = JD.field "dat" userDescriptionDecoder
+    in Jwt.decodeToken decoder tokenString
         |> Result.map (\usr -> AuthSession
             { authToken = AuthToken tokenString
             , userData =  usr
@@ -64,7 +71,17 @@ userDescriptionDecoder =
     |> JDP.required "name" JD.string
     |> JD.map UserDescription
 
--- Authorize 
+-- Token lifecycle management
+authenticate : TokenString -> Maybe (AuthSession, Cmd a)
+authenticate token = 
+    parseToken token
+    |> Maybe.map (\session -> (session, LS.storeString "AuthToken" token))
+
+logout : Requires AuthSession (Cmd a)
+logout = LS.clearKey "AuthToken"
+    |> always 
+
+-- Http Authorize 
 type alias Requires auth res = auth -> res
 
 authorize : HE.HttpRequest a -> Requires AuthSession (HE.HttpRequest a)

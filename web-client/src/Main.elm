@@ -2,18 +2,19 @@ module Main exposing (main)
 
 import Browser
 
-import IO.Api as Api
-import IO.LocalStorage as LS
-
 import Auth 
 import Login
+
+import IO.LocalStorage as LS
+import IO.Api as Api
 
 import Html exposing (Html, text, img, div)
 import Html.Attributes exposing (src, class)
 import Html.Events exposing (onClick)
 
-import Http 
 import Http.Extra as HE
+import Delay as D
+import Result.Extra as RE
 
 import Assets exposing (elmLogoUrl)
 
@@ -23,7 +24,7 @@ main =
         { init = init
         , update = update
         , view = view
-        , subscriptions = always Sub.none
+        , subscriptions = subscriptions 
         }
 
 type alias Options =
@@ -38,12 +39,12 @@ type alias HasApiUrl a =
 
 init : Options -> (AppModel, Cmd Command)
 init opt = 
-    let authSession = Maybe.andThen Auth.parseToken opt.authToken
-        model = case authSession of 
-            Nothing -> Anonymous Login.emptyModel
-            Just session -> Authorized <| AuthorizedModel session
-        env = createEnv opt
-    in (AppModel env model, Cmd.none)
+    let env = createEnv opt
+        model = Anonymous Login.emptyModel
+        cmd = Maybe.map AuthTokenChanged opt.authToken
+            |> Maybe.map (\c -> D.after 0 D.Millisecond c)
+            |> Maybe.withDefault Cmd.none
+    in (AppModel env model, cmd)
 
 createEnv : Options -> Environment
 createEnv opt = { apiUrl = HE.Url opt.apiUrl }
@@ -52,20 +53,42 @@ update : Command -> AppModel -> (AppModel, Cmd Command)
 update cmd app = 
     case (cmd, app.model) of 
         (Login loginCmd, Anonymous loginData) -> 
-            case loginCmd of 
-                Login.LoggedIn authToken -> 
-                    let authResult = authenticate authToken
-                    in  case authResult of
-                        Nothing -> (app, Cmd.none)
-                        Just (session, eff) -> 
-                            ( { app | model = Authorized (AuthorizedModel session) } 
-                            , Cmd.batch [ eff, testRenewToken app.env session] )
+                let (model, c) = Login.update app.env.apiUrl loginCmd loginData
+                        |> Tuple.mapBoth Anonymous (Cmd.map Login)
+                in ({ app | model = model }, c)
 
-                _ -> Login.update app.env.apiUrl loginCmd loginData
-                    |> Tuple.mapBoth Anonymous (Cmd.map Login)
-                    |> Tuple.mapFirst (\m -> { app | model = m })
         (Logout, Authorized authModel) ->
-            ( { app | model = Anonymous Login.emptyModel } , logout authModel.authSession )
+            ( { app | model = Anonymous Login.emptyModel } , Auth.logout authModel.authSession )
+
+        (AuthTokenChanged newToken, Authorized authModel) -> 
+            let (newModel, newCmd) = case Auth.authenticate newToken of 
+                    Nothing -> 
+                        ( Anonymous Login.emptyModel, Auth.logout authModel.authSession)
+                    Just (authSession, c) -> 
+                        ( Authorized { authModel | authSession = authSession }
+                        , Cmd.batch
+                            [ c
+                            , D.after 5 D.Second (RenewAuthToken authSession)
+                            ]
+                        )
+            in ( { app | model = newModel }, newCmd )
+        (AuthTokenChanged newToken, Anonymous x) -> 
+            let (newModel, newCmd) = case Auth.authenticate newToken of
+                    Nothing -> (Anonymous x, Cmd.none)
+                    Just (authSession, c) -> 
+                        ( Authorized (AuthorizedModel authSession)
+                        , Cmd.batch
+                            [ c
+                            , D.after 5 D.Second (RenewAuthToken authSession)
+                            ]
+                        )
+            in ( { app | model = newModel }, newCmd )
+        (RenewAuthToken _, Authorized authModel) ->
+            let c = Api.renewToken authModel.authSession
+                    |> HE.execute app.env.apiUrl
+                    |> Cmd.map (RE.unpack (\_ -> Logout) AuthTokenChanged)
+            in (app, c)
+
         (_, _) -> (app, Cmd.none)
 
 type alias AppModel = 
@@ -83,15 +106,16 @@ type alias AuthorizedModel =
 
 type Command 
     = Login Login.LoginCmd
-    | Command (Result Http.Error Api.OverviewDto)
     | Logout
+    | AuthTokenChanged Auth.TokenString
+    | RenewAuthToken Auth.AuthSession
+    | NoOp -- :( 
 
-testRenewToken : HasApiUrl a -> Auth.AuthSession -> Cmd Command
-testRenewToken { apiUrl } auth =
-    Api.renewToken auth
-    |> HE.mapRequest (\_ -> Api.OverviewDto "A")
-    |> HE.execute apiUrl
-    |> Cmd.map Command
+subscriptions : AppModel -> Sub Command
+subscriptions _ = 
+    LS.listenStringStorageKeyChange "AuthToken" 
+    |> Sub.map (Maybe.map AuthTokenChanged >> Maybe.withDefault NoOp)
+
 
 view : AppModel -> Html Command
 view app = 
@@ -109,11 +133,3 @@ loggedView  model = div
         [ onClick Logout ]
         [ text "Logout" ]
     ]
-
-authenticate : String -> Maybe (Auth.AuthSession, Cmd a)
-authenticate tokenString = 
-    Auth.parseToken tokenString
-    |> Maybe.map (\ses -> (ses, Cmd.batch [ LS.storeString "AuthToken" tokenString ] ))
-
-logout : Auth.Requires Auth.AuthSession (Cmd a)
-logout = always <| LS.clearKey "AuthToken"
