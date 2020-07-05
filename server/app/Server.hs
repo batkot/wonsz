@@ -4,6 +4,7 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE LambdaCase #-}
 
 module Server 
     ( app )
@@ -46,7 +47,7 @@ instance FromJSON LoginData
 instance ToJSON LoginData
 
 -- Authentication
-type AuthenticationApi = "login" :> ReqBody '[JSON] LoginData :> Post '[JSON] String
+type LoginApi = "login" :> ReqBody '[JSON] LoginData :> Post '[JSON] String
 
 type CommandHandler m cmd res = cmd -> m res
 
@@ -84,12 +85,39 @@ createJWT jwt UserDescription{..} = liftIO $ do
         Left _ -> return Nothing
         Right t -> return $ Just t
 
+type AuthApi = "renewToken" :> Post '[JSON] String
+
+renewTokenHandler 
+    :: Monad m
+    => MonadError ServerError m
+    => MonadIO m
+    => AuthResult AuthorizedUser
+    -> AuthTokenCreator m
+    -> m String
+renewTokenHandler (Authenticated user) createToken = 
+    createToken userDescription >>= \case
+        Nothing -> throwError err401
+        Just token -> return token
+  where
+    userDescription = UserDescription (auId  user) (name user)
+
+renewTokenHandler _ _ = throwError err401
+
+authApi 
+    :: Monad m
+    => MonadError ServerError m
+    => MonadIO m
+    => JWTSettings
+    -> AuthResult AuthorizedUser
+    -> m String
+authApi jwt auth = renewTokenHandler auth (createJWT jwt)
+
 authenticationApi
     :: MonadIO m 
     => UserMonad m
     => MonadError ServerError m
     => JWTSettings 
-    -> ServerT AuthenticationApi m
+    -> ServerT LoginApi m
 authenticationApi jwt = loginHandler (createJWT jwt)
 
 -- Wonsz Api
@@ -100,10 +128,12 @@ wonszApi (Authenticated user) = return $ "Hello " <> name user
 wonszApi _ = throwAll err401
 
 -- Api
-type Api auth = (Auth auth AuthorizedUser :> WonszApi) :<|> AuthenticationApi
+type Api auth = (Auth auth AuthorizedUser :> WonszApi) 
+    :<|> (Auth auth AuthorizedUser :> AuthApi) 
+    :<|> LoginApi
 
 server :: JWTSettings -> Server (Api auth)
-server jwt = wonszApi :<|> authenticationApi jwt 
+server jwt = wonszApi :<|> authApi jwt :<|> authenticationApi jwt 
 
 app :: JWK -> Application
 app key = serveWithContext api context $ server jwtSettings

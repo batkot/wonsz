@@ -1,7 +1,10 @@
-port module LocalStorage exposing 
+port module IO.LocalStorage exposing 
     ( store
     , storeString
     , setLocalStorageKey
+
+    , clearKey
+    , dropLocalStorageKey
     )
 
 import Json.Encode as JE
@@ -15,3 +18,7 @@ storeString : Key -> String -> Cmd msg
 storeString key = store JE.string key
 
 port setLocalStorageKey : (String, JE.Value) -> Cmd msg
+port dropLocalStorageKey : String -> Cmd msg
+
+clearKey : Key -> Cmd msg
+clearKey = dropLocalStorageKey

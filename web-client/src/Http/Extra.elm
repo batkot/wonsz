@@ -61,7 +61,8 @@ addHeader header (HttpRequest req) = HttpRequest
 mapRequest : (a -> b) -> HttpRequest a -> HttpRequest b
 mapRequest f (HttpRequest req) = 
     let mappedDecoder = JD.map f req.responseDecoder
-    in makeRequest req.url req.method mappedDecoder req.body
+        request = makeRequest req.url req.method mappedDecoder req.body
+    in List.foldl addHeader request req.headers
 
 makeRequest : Url -> HttpMethod -> JD.Decoder a -> Http.Body -> HttpRequest a
 makeRequest url method decoder body = RequestConfig url method decoder body []

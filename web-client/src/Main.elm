@@ -3,13 +3,14 @@ module Main exposing (main)
 import Browser
 
 import IO.Api as Api
+import IO.LocalStorage as LS
 
 import Auth 
-import LocalStorage as LS
 import Login
 
 import Html exposing (Html, text, img, div)
 import Html.Attributes exposing (src, class)
+import Html.Events exposing (onClick)
 
 import Http 
 import Http.Extra as HE
@@ -53,18 +54,18 @@ update cmd app =
         (Login loginCmd, Anonymous loginData) -> 
             case loginCmd of 
                 Login.LoggedIn authToken -> 
-                    let authSession = Auth.parseToken authToken
-                    in  case authSession of
+                    let authResult = authenticate authToken
+                    in  case authResult of
                         Nothing -> (app, Cmd.none)
-                        Just session -> ( { app | model = Authorized (AuthorizedModel session) }
-                                        , Cmd.batch
-                                            [ LS.storeString "AuthToken" authToken
-                                            , authHttpTest app.env session
-                                            ])
+                        Just (session, eff) -> 
+                            ( { app | model = Authorized (AuthorizedModel session) } 
+                            , Cmd.batch [ eff, testRenewToken app.env session] )
 
                 _ -> Login.update app.env.apiUrl loginCmd loginData
                     |> Tuple.mapBoth Anonymous (Cmd.map Login)
                     |> Tuple.mapFirst (\m -> { app | model = m })
+        (Logout, Authorized authModel) ->
+            ( { app | model = Anonymous Login.emptyModel } , logout authModel.authSession )
         (_, _) -> (app, Cmd.none)
 
 type alias AppModel = 
@@ -80,16 +81,17 @@ type alias AuthorizedModel =
     { authSession : Auth.AuthSession
     }
 
--- This goes to separate module with Auth info?
-authHttpTest : HasApiUrl env -> Auth.AuthSession -> Cmd Command
-authHttpTest { apiUrl } session =
-    Api.overview session
-    |> HE.execute apiUrl
-    |> Cmd.map Command
-
 type Command 
     = Login Login.LoginCmd
     | Command (Result Http.Error Api.OverviewDto)
+    | Logout
+
+testRenewToken : HasApiUrl a -> Auth.AuthSession -> Cmd Command
+testRenewToken { apiUrl } auth =
+    Api.renewToken auth
+    |> HE.mapRequest (\_ -> Api.OverviewDto "A")
+    |> HE.execute apiUrl
+    |> Cmd.map Command
 
 view : AppModel -> Html Command
 view app = 
@@ -97,10 +99,21 @@ view app =
         Anonymous loginData -> Html.map Login (Login.view loginData)
         Authorized authorized -> loggedView authorized
 
-loggedView : AuthorizedModel -> Html a
+loggedView : AuthorizedModel -> Html Command
 loggedView  model = div 
     [ class "elm-container" ]
     [ text ((Auth.user >> Auth.userName) model.authSession)
     , img [ src elmLogoUrl ] []
     , text "Elm 0.19 Webpack4 Starter" 
+    , div 
+        [ onClick Logout ]
+        [ text "Logout" ]
     ]
+
+authenticate : String -> Maybe (Auth.AuthSession, Cmd a)
+authenticate tokenString = 
+    Auth.parseToken tokenString
+    |> Maybe.map (\ses -> (ses, Cmd.batch [ LS.storeString "AuthToken" tokenString ] ))
+
+logout : Auth.Requires Auth.AuthSession (Cmd a)
+logout = always <| LS.clearKey "AuthToken"

@@ -1,5 +1,6 @@
 module IO.Api exposing 
     ( login
+    , renewToken
 
     , overview
     , OverviewDto
@@ -39,4 +40,9 @@ overviewDtoDecoder =
 overview : Authorized OverviewDto
 overview = 
     makeRequest (Url "/overview") Get overviewDtoDecoder emptyBody
+    |> authorize
+
+renewToken : Authorized AuthTokenString
+renewToken = 
+    makeRequest (Url "/renewToken") Post JD.string emptyBody
     |> authorize

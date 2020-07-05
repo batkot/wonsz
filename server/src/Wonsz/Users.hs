@@ -28,7 +28,6 @@ class Monad m => UserMonad m where
   getUser :: UserName -> m (Maybe User)
   getUser userName = return $ Just $ User 1 userName "password"
 
-
 login 
     :: UserMonad m 
     => CryptoSettings 
