@@ -4,6 +4,7 @@ module Html.Extra exposing
     , KeyCode(..)
 
     , enter
+    , escape
     )
 
 import Html exposing (Attribute)
@@ -11,11 +12,16 @@ import Html.Events exposing (keyCode, on)
 
 import Json.Decode as JD
 
-
 type KeyCode = KeyCode Int
 
 enter : KeyCode
 enter = KeyCode 13
+
+escape : KeyCode
+escape = KeyCode 27
+
+keyCodeToString : KeyCode -> String
+keyCodeToString (KeyCode k) = "KeyCode: " ++ String.fromInt k
 
 onKeyDown : (KeyCode -> msg) -> Attribute msg
 onKeyDown f = 
@@ -23,7 +29,10 @@ onKeyDown f =
 
 onKey : KeyCode -> msg -> Attribute msg
 onKey key msg =
-    onKeyDownInternal (\k -> if k == key then JD.succeed msg else JD.fail "")
+    let matchKey k =
+            if k == key then JD.succeed msg
+            else JD.fail ("Expected: " ++ keyCodeToString key ++ ". Got: " ++ keyCodeToString k)
+    in onKeyDownInternal matchKey
 
 onKeyDownInternal : (KeyCode -> JD.Decoder msg) -> Attribute msg
 onKeyDownInternal f = 

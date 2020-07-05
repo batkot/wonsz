@@ -7,6 +7,8 @@ module Http.Extra exposing
     , HttpMethod(..)
     , Url(..)
     , execute
+
+    , httpErrorToMessage
     )
 
 import Http
@@ -22,6 +24,15 @@ type HttpMethod
     | Delete
 
 type Url = Url String
+
+httpErrorToMessage : Http.Error -> String
+httpErrorToMessage err = case err of
+    Http.BadUrl x -> "BadUrl: " ++ x
+    Http.Timeout -> "Connection Problem"
+    Http.NetworkError -> "Connection Problem"
+    Http.BadStatus x -> "Bad status: " ++ String.fromInt x
+    Http.BadBody x -> "Bad response body: " ++ x
+
 
 unUrl : Url -> String
 unUrl (Url x) = x
