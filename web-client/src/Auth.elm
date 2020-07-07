@@ -1,6 +1,5 @@
 module Auth exposing
     ( AuthSession
-    , HasAuthSession
     , user
 
     , UserDescription
@@ -26,8 +25,6 @@ import Json.Decode as JD
 import Json.Decode.Pipeline as JDP
 import Jwt
 import Result
-
-type alias HasAuthSession a = { a | authSession : AuthSession }
 
 type AuthToken = AuthToken String
 

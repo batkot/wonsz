@@ -12,6 +12,7 @@ import Html exposing (Html, text, img, div)
 import Html.Attributes exposing (src, class)
 import Html.Events exposing (onClick)
 
+import Cmd.Extra as CE
 import Http.Extra as HE
 import Delay as D
 import Result.Extra as RE
@@ -42,7 +43,7 @@ init opt =
     let env = createEnv opt
         model = Anonymous Login.emptyModel
         cmd = Maybe.map AuthTokenChanged opt.authToken
-            |> Maybe.map (\c -> D.after 0 D.Millisecond c)
+            |> Maybe.map CE.pure
             |> Maybe.withDefault Cmd.none
     in (AppModel env model, cmd)
 
@@ -68,7 +69,7 @@ update cmd app =
                         ( Authorized { authModel | authSession = authSession }
                         , Cmd.batch
                             [ c
-                            , D.after 5 D.Second (RenewAuthToken authSession)
+                            , D.after 1 D.Hour (RenewAuthToken authSession)
                             ]
                         )
             in ( { app | model = newModel }, newCmd )
@@ -79,7 +80,7 @@ update cmd app =
                         ( Authorized (AuthorizedModel authSession)
                         , Cmd.batch
                             [ c
-                            , D.after 5 D.Second (RenewAuthToken authSession)
+                            , D.after 1 D.Hour (RenewAuthToken authSession)
                             ]
                         )
             in ( { app | model = newModel }, newCmd )

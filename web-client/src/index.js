@@ -20,5 +20,7 @@ app.ports.dropLocalStorageKey.subscribe(function(key) {
 });
 
 window.addEventListener("storage", function(ev) {
-    app.ports.storageKeyChanged.send([ev.key, ev.newValue]);
+    if (ev.storageArea === window.localStorage) {
+        app.ports.storageKeyChanged.send([ev.key, ev.newValue]);
+    }
 });
