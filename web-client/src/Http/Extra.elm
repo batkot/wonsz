@@ -6,6 +6,7 @@ module Http.Extra exposing
 
     , HttpMethod(..)
     , Url(..)
+    , HasBaseUrl
     , execute
 
     , httpErrorToMessage
@@ -14,6 +15,8 @@ module Http.Extra exposing
 import Http
 
 import Json.Decode as JD
+
+type alias HasBaseUrl a = { a | baseUrl : Url }
 
 type HttpRequest a = HttpRequest (RequestConfig a)
 

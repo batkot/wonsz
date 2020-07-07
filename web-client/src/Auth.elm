@@ -1,5 +1,7 @@
 module Auth exposing
-    ( AuthSession
+    ( AuthCommand
+
+    , AuthSession
     , user
 
     , UserDescription
@@ -25,6 +27,11 @@ import Json.Decode as JD
 import Json.Decode.Pipeline as JDP
 import Jwt
 import Result
+
+type AuthCommand 
+    = ValidateToken TokenString
+    | RenewToken AuthSession
+    | Logout AuthSession
 
 type AuthToken = AuthToken String
 
@@ -68,15 +75,17 @@ userDescriptionDecoder =
     |> JDP.required "name" JD.string
     |> JD.map UserDescription
 
+authTokenStorageKey : String
+authTokenStorageKey = "AuthToken"
+
 -- Token lifecycle management
 authenticate : TokenString -> Maybe (AuthSession, Cmd a)
 authenticate token = 
     parseToken token
-    |> Maybe.map (\session -> (session, LS.storeString "AuthToken" token))
+    |> Maybe.map (\session -> (session, LS.storeString authTokenStorageKey token))
 
 logout : Requires AuthSession (Cmd a)
-logout = LS.clearKey "AuthToken"
-    |> always 
+logout = always <| LS.clearKey authTokenStorageKey
 
 -- Http Authorize 
 type alias Requires auth res = auth -> res

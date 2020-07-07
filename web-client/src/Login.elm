@@ -1,6 +1,7 @@
 module Login exposing 
     ( LoginCmd
     , LoginData
+    , LoginResult(..)
 
     , emptyModel
     , update
@@ -34,25 +35,26 @@ type alias LoginData =
     , failMessage : String
     }
 
+type LoginResult 
+    = InProgress LoginData
+    | TokenObtained Auth.TokenString
+
 emptyModel : LoginData
 emptyModel = LoginData "" "" ""
 
-update : HE.Url -> LoginCmd -> LoginData -> (LoginData , Cmd LoginCmd)
-update apiUrl cmd model =
+update : HE.HasBaseUrl a -> LoginCmd -> LoginData -> (LoginResult, Cmd LoginCmd)
+update { baseUrl } cmd model =
     case cmd of
         UserNameChanged userName -> 
-            ( { model | user = userName }, Cmd.none )
+            ( InProgress { model | user = userName }, Cmd.none )
         PasswordChanged password -> 
-            ( { model | password = password }, Cmd.none )
+            ( InProgress { model | password = password }, Cmd.none )
         RequestLogin -> 
-            ( model, requestLogin apiUrl model)
+            ( InProgress model, requestLogin baseUrl model)
         LoginFailed err -> 
-            ( { model | failMessage = err }, Cmd.none)
+            ( InProgress { model | failMessage = err }, Cmd.none)
         LoggedIn token -> 
-            let c = Auth.authenticate token
-                    |> Maybe.map Tuple.second
-                    |> Maybe.withDefault Cmd.none
-            in (model, c)
+            ( TokenObtained token, Cmd.none)
 
 requestLogin : HE.Url -> LoginData -> Cmd LoginCmd
 requestLogin apiUrl loginData = 
