@@ -8,10 +8,10 @@ module Login exposing
     , view
     )
 
-import Html exposing (Html, div, input, text)
+import Html exposing (Html, div, input, text, span)
 import Html.Attributes exposing (class, placeholder, type_, value, style)
 import Html.Events exposing (onInput, onClick)
-import Html.Extra exposing (enter, onKey)
+import Html.Extra exposing (enter, onKey, empty)
 
 import Result.Extra as RE
 
@@ -68,10 +68,15 @@ requestLogin apiUrl loginData =
 view : LoginData -> Html LoginCmd
 view loginData = 
     let
-        error = if String.isEmpty loginData.failMessage then div [] [] else div [] [text loginData.failMessage]
-    in
-        div [ class "login-form" ]
-            [ input 
+        error = if String.isEmpty loginData.failMessage then empty else span [ class "login-error" ] [ text loginData.failMessage ]
+    in div 
+        [ class "elm-container" ] 
+        [ div 
+            [ class "login-form" ]
+            [ span 
+                [ class "title" ]
+                [ text "Wonsz 2020" ]
+            , input 
                 [ type_ "text"
                 , style "display" "block"
                 , placeholder "Username"
@@ -87,9 +92,10 @@ view loginData =
                 , onInput PasswordChanged
                 , onKey enter RequestLogin ] 
                 []
+            , error
             , div 
                 [ class "login-btn"
                 , onClick RequestLogin ]
                 [ text "Login" ]
-            , error
             ]
+        ]

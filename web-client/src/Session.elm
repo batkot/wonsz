@@ -64,7 +64,11 @@ authenticateToken settings token =
         |> Maybe.map (\newSession -> (newSession, fx))
         |> Maybe.withDefault (Anonymous, Cmd.none)
 
-updateFx : HasSessionSettings a -> Command -> Session -> Fx.Eff (Fx.Comp (Fx.CommandFx Command) (Fx.Comp Fx.LocalStorageFx (Fx.HttpFx String Command))) Session
+updateFx 
+    : HasSessionSettings a 
+    -> Command 
+    -> Session 
+    -> Fx.Eff (Fx.Comp (Fx.CommandFx Command) (Fx.Comp Fx.LocalStorageFx (Fx.HttpFx String Command))) Session
 updateFx { sessionSettings } command session =
     case (command, session) of
         (ValidateToken token, _) -> 

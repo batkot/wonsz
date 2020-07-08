@@ -5,9 +5,11 @@ module Html.Extra exposing
 
     , enter
     , escape
+
+    , empty
     )
 
-import Html exposing (Attribute)
+import Html exposing (Html, Attribute)
 import Html.Events exposing (keyCode, on)
 
 import Json.Decode as JD
@@ -38,3 +40,5 @@ onKeyDownInternal : (KeyCode -> JD.Decoder msg) -> Attribute msg
 onKeyDownInternal f = 
     on "keydown" (JD.andThen (KeyCode >> f) keyCode)
 
+empty : Html a
+empty = Html.text ""

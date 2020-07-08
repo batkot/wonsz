@@ -1,15 +1,23 @@
-$babyBlue: #89CFF0;
+$white: #FEFFFF;
+$background: #DEF2F1;
+$light-green: #3AAFA9;
+$darker-green: #2B7A78;
+$darkest: #17252A;
+$error-red: #C2596E;
+
 ::placeholder {
-    color: gray;
+    color: $darker-green;
+    opacity: .7;
 }
 
 body {
-    background: $babyBlue;
+    background-image: linear-gradient(to bottom right, $background, $light-green);
     transition: 1s;
     margin: 0;
     padding:0;
     width: 100vw;
     height: 100vh;
+    color: $darkest;
 
     .elm-container {
         margin: 0;
@@ -23,5 +31,56 @@ body {
         img {
             display: block;
         }
+    }
+}
+
+.login-form {
+    border-radius: .25rem;
+    padding: 10px;
+    color: $darker-green;
+
+    .title {
+        margin: 20px 5px;
+        display: inline-block;
+        font-weight: bold;
+        font-size: 1.3rem;
+    }
+
+    input {
+        margin: 8px 0px;
+        padding: 5px;
+        border: 0px;
+        box-shadow: none;
+        background: $background;
+        border-radius: .25rem;
+        color: $darker-green;
+
+        &:focus {
+            background: $white;
+            border: 1px solid $darker-green;
+            padding: 4px;
+            color: $darker-green;
+        }
+    }
+
+    .login-btn {
+        color: $background;
+        background: $darker-green;
+        margin-top: 15px;
+        padding: 10px 2px;
+        border-radius: .25rem;
+        transition: .2s ease-in;
+        cursor: pointer;
+
+        &:hover {
+            color: $darker-green;
+            background: $background;
+        }
+    }
+
+    .login-error {
+        color: $error-red;
+        font-size: 0.7rem;
+        font-weight: 400;
     }
 }
