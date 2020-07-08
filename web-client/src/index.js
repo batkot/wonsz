@@ -2,7 +2,7 @@ require('./static/theme.scss');
 
 const { Elm } = require('./Main.elm');
 const env = require('./environment.js');
-env.authToken = window.localStorage.getItem("Session");
+env.authToken = window.localStorage.getItem(env.sessionCacheKey);
 
 const initSettings = 
     { 

@@ -6,7 +6,7 @@ import Auth
 import Login
 import Effect as Fx
 
-import Session
+import Session as S
 
 import IO.LocalStorage as LS
 
@@ -31,15 +31,16 @@ main =
 type alias Options =
     { apiUrl : String
     , authToken : Maybe String
+    , sessionCacheKey : String
     }
 
-type alias Environment = HE.HasBaseUrl (Session.HasSessionSettings {})
+type alias Environment = HE.HasBaseUrl (S.HasSessionSettings {})
 
 init : Options -> (AppModel, Cmd Command)
 init opt = 
     let env = createEnv opt
         model = Anonymous Login.emptyModel
-        cmd = Maybe.map (Session.ValidateToken >> Session) opt.authToken
+        cmd = Maybe.map (S.ValidateToken >> Session) opt.authToken
             |> Maybe.map CE.pure
             |> Maybe.withDefault Cmd.none
     in (AppModel env model, cmd)
@@ -47,7 +48,7 @@ init opt =
 createEnv : Options -> Environment
 createEnv opt = 
     { baseUrl = HE.Url opt.apiUrl
-    , sessionSettings = Session.SessionSettings "Session" 1
+    , sessionSettings = S.SessionSettings opt.sessionCacheKey 1
     }
 
 update : Command -> AppModel -> (AppModel, Cmd Command)
@@ -58,12 +59,12 @@ update cmd app =
                         (Login.InProgress m, x) -> 
                             (m, Cmd.map Login x)
                         (Login.TokenObtained token, x) -> 
-                            (loginData, Cmd.batch [ Cmd.map Login x, CE.pure (Session (Session.ValidateToken token))])
+                            (loginData, Cmd.batch [ Cmd.map Login x, CE.pure (Session (S.ValidateToken token))])
                 in ({ app | model = Anonymous model }, c)
 
         (Session sessionCmd, m) ->
                 let session = modelToSession m
-                    fxSession = Session.updateFx app.env sessionCmd session
+                    fxSession = S.updateFx app.env sessionCmd session
                     fxInterpreter = 
                         Fx.runCompFx Fx.runLocalStorageFx (Fx.runHttpFx app.env.baseUrl)
                         |> Fx.runCompFx Fx.runCommandFx 
@@ -73,19 +74,19 @@ update cmd app =
                 
         (_, _) -> (app, Cmd.none)
 
-modelToSession : Model -> Session.Session
+modelToSession : Model -> S.Session
 modelToSession model = 
     case model of
-        Anonymous _ -> Session.Anonymous
-        Authorized m -> Session.Authenticated m.authSession
+        Anonymous _ -> S.Anonymous
+        Authorized m -> S.Authenticated m.authSession
 
-updateSession : Model -> Session.Session -> Model
+updateSession : Model -> S.Session -> Model
 updateSession model session = 
     case (model, session) of
-        (Anonymous l, Session.Anonymous) -> Anonymous l
-        (Authorized _, Session.Anonymous) -> Anonymous Login.emptyModel
-        (Anonymous _, Session.Authenticated s) -> Authorized (AuthorizedModel s)
-        (Authorized m, Session.Authenticated s) -> Authorized { m | authSession = s }
+        (Anonymous l, S.Anonymous) -> Anonymous l
+        (Authorized _, S.Anonymous) -> Anonymous Login.emptyModel
+        (Anonymous _, S.Authenticated s) -> Authorized (AuthorizedModel s)
+        (Authorized m, S.Authenticated s) -> Authorized { m | authSession = s }
 
 type alias AppModel = 
     { env : Environment
@@ -102,12 +103,12 @@ type alias AuthorizedModel =
 
 type Command 
     = Login Login.LoginCmd
-    | Session Session.Command
+    | Session S.Command
 
 subscriptions : AppModel -> Sub Command
 subscriptions _ = 
     LS.listenStringStorageKeyChange "Session"
-    |> Sub.map (Maybe.map Session.ValidateToken >> Maybe.withDefault Session.Logout)
+    |> Sub.map (Maybe.map S.ValidateToken >> Maybe.withDefault S.Logout)
     |> Sub.map Session
 
 view : AppModel -> Html Command
@@ -123,6 +124,6 @@ loggedView  model = div
     , img [ src elmLogoUrl ] []
     , text "Elm 0.19 Webpack4 Starter" 
     , div 
-        [ onClick (Session Session.Logout) ]
+        [ onClick (Session S.Logout) ]
         [ text "Logout" ]
     ]
