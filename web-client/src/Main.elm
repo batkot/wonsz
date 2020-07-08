@@ -4,6 +4,7 @@ import Browser
 
 import Auth 
 import Login
+import Effect as Fx
 
 import Session
 
@@ -62,10 +63,14 @@ update cmd app =
 
         (Session sessionCmd, m) ->
                 let session = modelToSession m
-                    (newSession, newCmd) = Session.update app.env sessionCmd session
+                    fxSession = Session.updateFx app.env sessionCmd session
+                    fxInterpreter = 
+                        Fx.runCompFx Fx.runLocalStorageFx (Fx.runHttpFx app.env.baseUrl)
+                        |> Fx.runCompFx Fx.runCommandFx 
+                    (newSession, newCmd) = Fx.interpret Cmd.none fxInterpreter fxSession
                     newModel = updateSession m newSession
                 in ({ app | model = newModel }, Cmd.map Session newCmd )
-
+                
         (_, _) -> (app, Cmd.none)
 
 modelToSession : Model -> Session.Session

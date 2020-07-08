@@ -4,6 +4,8 @@ module Session exposing
     , HasSessionSettings
     , Command(..)
     , update
+
+    , updateFx
     )
 
 import Auth exposing (AuthSession, TokenString)
@@ -14,6 +16,8 @@ import Http.Extra as HE exposing (HasBaseUrl)
 import IO.Api as Api
 import IO.LocalStorage as LS
 import Delay as D
+
+import Effect as Fx
 
 type Session 
     = Anonymous
@@ -59,3 +63,30 @@ authenticateToken settings token =
         |> Maybe.map Authenticated
         |> Maybe.map (\newSession -> (newSession, fx))
         |> Maybe.withDefault (Anonymous, Cmd.none)
+
+updateFx : HasSessionSettings a -> Command -> Session -> Fx.Eff (Fx.Comp (Fx.CommandFx Command) (Fx.Comp Fx.LocalStorageFx (Fx.HttpFx String Command))) Session
+updateFx { sessionSettings } command session =
+    case (command, session) of
+        (ValidateToken token, _) -> 
+            let cmdFx = Fx.Delay RenewToken sessionSettings.sessionRefresh
+                lsFx = Fx.Store sessionSettings.cacheKey token
+            in Auth.parseToken token
+                |> Maybe.map Authenticated
+                |> Maybe.withDefault Anonymous
+                |> Fx.pure 
+                |> Fx.addFx lsFx
+                |> Fx.mapFx (Fx.A >> Fx.B)
+                |> Fx.addFx (Fx.A cmdFx)
+
+        (_, Anonymous) -> Fx.pure session
+
+        (RenewToken, Authenticated auth) -> 
+            let httpFx = Fx.Request (Api.renewToken auth) (RE.unpack (always Logout) ValidateToken)
+            in Fx.pure session
+                |> Fx.addFx httpFx
+                |> Fx.mapFx (Fx.B >> Fx.B)
+
+        (Logout, Authenticated _) -> 
+            Fx.pure Anonymous
+            |> Fx.addFx (Fx.Clear sessionSettings.cacheKey)
+            |> Fx.mapFx (Fx.A >> Fx.B)
