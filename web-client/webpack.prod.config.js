@@ -82,7 +82,8 @@ module.exports = {
             filename: 'index.html'
         }),
         new Webpack.DefinePlugin({
-            __API_URL__: "'prod_api_url'"
+            __API_URL__: "'prod_api_url'",
+            __APP_LANG__: "'pl'"
         })
     ]
 }

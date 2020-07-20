@@ -18,6 +18,9 @@ import Cmd.Extra as CE
 import Http.Extra as HE
 
 import Assets exposing (elmLogoUrl)
+import Lang
+import Lang.Pl as PL
+import Lang.En as EN
 
 main : Program Options AppModel Command
 main = 
@@ -32,9 +35,10 @@ type alias Options =
     { apiUrl : String
     , authToken : Maybe String
     , sessionCacheKey : String
+    , lang : String
     }
 
-type alias Environment = HE.HasBaseUrl (S.HasSessionSettings {})
+type alias Environment = Lang.HasDict (HE.HasBaseUrl (S.HasSessionSettings {}))
 
 init : Options -> (AppModel, Cmd Command)
 init opt = 
@@ -47,9 +51,15 @@ init opt =
 
 createEnv : Options -> Environment
 createEnv opt = 
-    { baseUrl = HE.Url opt.apiUrl
-    , sessionSettings = S.SessionSettings opt.sessionCacheKey 1
-    }
+    let
+        dict = case opt.lang of 
+            "pl" -> PL.dictionary
+            _ -> EN.dictionary
+    in
+        { baseUrl = HE.Url opt.apiUrl
+        , sessionSettings = S.SessionSettings opt.sessionCacheKey 1
+        , dict = dict
+        }
 
 update : Command -> AppModel -> (AppModel, Cmd Command)
 update cmd app = 
@@ -114,7 +124,7 @@ subscriptions _ =
 view : AppModel -> Html Command
 view app = 
     case app.model of
-        Anonymous loginData -> Html.map Login (Login.view loginData)
+        Anonymous loginData -> Html.map Login (Login.view app.env loginData)
         Authorized authorized -> loggedView authorized
 
 loggedView : AuthorizedModel -> Html Command
