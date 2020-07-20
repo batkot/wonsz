@@ -3,15 +3,21 @@ $background: #DEF2F1;
 $light-green: #3AAFA9;
 $darker-green: #2B7A78;
 $darkest: #17252A;
-$error-red: #C2596E;
+$error-red: #FFCCCB;
+$error-font: #8B0000;
+
+$yellow: #CCBC56;
+$green: #1B4F56;
+$grey: #DDD;
+
 
 ::placeholder {
-    color: $darker-green;
-    opacity: .7;
+    color: $grey;
+    opacity: .5;
 }
 
 body {
-    background-image: linear-gradient(to bottom right, $background, $light-green);
+    background-image: linear-gradient(to bottom right, $yellow, $green);
     transition: 1s;
     margin: 0;
     padding:0;
@@ -36,36 +42,41 @@ body {
 
 .login-form {
     border-radius: .25rem;
-    padding: 10px;
-    color: $darker-green;
+    padding: 50px;
+    color: $white;
+    height: 100%;
+    text-align: center;
 
     .title {
         margin: 20px 5px;
         display: inline-block;
         font-weight: bold;
         font-size: 1.3rem;
+
+        img {
+            filter: invert(100%);
+            max-width: 200px;
+        }
     }
 
     input {
         margin: 8px 0px;
-        padding: 5px;
+        padding: 8px 5px;
         border: 0px;
+        border-bottom: 1px solid $grey;
         box-shadow: none;
-        background: $background;
-        border-radius: .25rem;
-        color: $darker-green;
+        background: transparent;
+        color: $grey;
 
         &:focus {
-            background: $white;
-            border: 1px solid $darker-green;
-            padding: 4px;
-            color: $darker-green;
+            border-bottom: 1px solid $white;
+            color: $white;
         }
     }
 
     .login-btn {
         color: $background;
-        background: $darker-green;
+        border: 1px solid $background;
         margin-top: 15px;
         padding: 10px 2px;
         border-radius: .25rem;
@@ -73,13 +84,15 @@ body {
         cursor: pointer;
 
         &:hover {
-            color: $darker-green;
+            color: $green;
             background: $background;
         }
     }
 
     .login-error {
-        color: $error-red;
+        padding: 10px 0;
+        height: 15px;
+        color: $error-font;
         font-size: 0.7rem;
         font-weight: 400;
     }

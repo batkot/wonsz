@@ -8,8 +8,8 @@ module Login exposing
     , view
     )
 
-import Html exposing (Html, div, input, text, span)
-import Html.Attributes exposing (class, placeholder, type_, value, style)
+import Html exposing (Html, div, input, text, span, img)
+import Html.Attributes exposing (class, placeholder, type_, value, style, src)
 import Html.Events exposing (onInput, onClick)
 import Html.Extra exposing (enter, onKey, empty)
 
@@ -21,6 +21,7 @@ import Http
 import Http.Extra as HE
 
 import Auth
+import Assets 
 
 type LoginCmd
     = UserNameChanged String
@@ -67,35 +68,37 @@ requestLogin apiUrl loginData =
 
 view : LoginData -> Html LoginCmd
 view loginData = 
-    let
-        error = if String.isEmpty loginData.failMessage then empty else span [ class "login-error" ] [ text loginData.failMessage ]
-    in div 
-        [ class "elm-container" ] 
+    div 
+    [ class "elm-container" ] 
+    [ div 
+        [ class "login-form" ]
         [ div 
-            [ class "login-form" ]
-            [ span 
-                [ class "title" ]
-                [ text "Wonsz 2020" ]
-            , input 
+            [ class "title" ]
+            [ img [ src Assets.logo ] [] ]
+        , div [] 
+            [ input 
                 [ type_ "text"
-                , style "display" "block"
                 , placeholder "Username"
                 , value loginData.user
                 , onInput UserNameChanged
                 , onKey enter RequestLogin ] 
                 []
-            , input 
+            ]
+        , div [] 
+            [ input 
                 [ type_ "password"
-                , style "display" "block"
                 , placeholder "Password"
                 , value loginData.password
                 , onInput PasswordChanged
                 , onKey enter RequestLogin ] 
                 []
-            , error
-            , div 
-                [ class "login-btn"
-                , onClick RequestLogin ]
-                [ text "Login" ]
             ]
+        , div 
+            [ class "login-error" ]
+            [ text loginData.failMessage ] 
+        , div 
+            [ class "login-btn"
+            , onClick RequestLogin ]
+            [ text "Login" ]
         ]
+    ]
