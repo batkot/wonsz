@@ -1,0 +1,78 @@
+@import 'colors.scss';
+
+.login-container {
+    background-image: linear-gradient(to bottom right, $yellow, $green);
+    transition: 1s;
+    margin: 0;
+    padding:0;
+    width: 100vw;
+    height: 100vh;
+    color: $darkest;
+
+    .login-form {
+        margin: 0;
+        padding:0;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+
+
+        border-radius: .25rem;
+        padding: 50px;
+        color: $white;
+        text-align: center;
+
+        .title {
+            margin: 20px 5px;
+            display: inline-block;
+            font-weight: bold;
+            font-size: 1.3rem;
+
+            img {
+                filter: invert(100%);
+                max-width: 200px;
+            }
+        }
+
+        input {
+            margin: 8px 0px;
+            padding: 8px 5px;
+            border: 0px;
+            border-bottom: 1px solid $grey;
+            box-shadow: none;
+            background: transparent;
+            color: $grey;
+
+            &:focus {
+                border-bottom: 1px solid $white;
+                color: $white;
+            }
+        }
+
+        .login-btn {
+            color: $background;
+            // border: 1px solid $background;
+            text-transform: uppercase;
+            margin-top: 15px;
+            padding: 10px 2px;
+            border-radius: .25rem;
+            transition: .2s ease-in;
+            cursor: pointer;
+
+            &:hover {
+                color: $green;
+                background: $background;
+            }
+        }
+
+        .login-error {
+            padding: 10px 0;
+            height: 15px;
+            color: $error-font;
+            font-size: 0.7rem;
+            font-weight: 400;
+        }
+    }
+}

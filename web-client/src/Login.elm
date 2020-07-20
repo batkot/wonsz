@@ -85,7 +85,7 @@ view { dict } loginData =
             Nothing -> ""
     in
         div 
-        [ class "elm-container" ] 
+        [ class "login-container" ] 
         [ div 
             [ class "login-form" ]
             [ div 
