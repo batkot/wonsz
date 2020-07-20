@@ -1,5 +1,6 @@
 @import "theme/colors.scss";
 @import "theme/login.scss";
+@import "theme/scoreboard.scss";
 
 ::placeholder {
     color: $grey;
@@ -18,21 +19,18 @@ body {
     position: relative;
     margin: auto;
     overflow-x: hidden;
+    color: $white;
 
     min-height: 100vh;
-    background: rgba(255,255,255, 0.8); 
-    box-shadow: 0 0 13px 0 rgba(0,0,0,0.3);
 
     .header {
         padding: 5px;
         width: 100%;
-        position: sticky;
-        background: $white;
-        top: 0;
 
         img {
             max-width: 100px;
             display: inline-block;
+            filter: invert(100%);
         }
     }
 

@@ -1,0 +1,79 @@
+@import "colors.scss";
+
+$gold: #D4AF37;
+$silver: #C0C0C0;
+$bronze: #CD7F32;
+
+$medal-size: 40px;
+
+.scoreboard {
+    .player {
+        margin: 10px;
+        border-radius: 2rem;
+        cursor: pointer;
+        transition: .3s ease-in;
+
+        &:hover {
+            color: $white;
+        }
+
+        &.place-1 {
+            &:hover {
+                background: $gold;
+            }
+
+            .place {
+                background: $gold;
+            }
+        }
+
+        &.place-2 {
+            &:hover {
+                background: $silver;
+            }
+
+            .place {
+                background: $silver;
+            }
+        }
+
+        &.place-3 {
+            &:hover {
+                background: $bronze;
+            }
+
+            .place {
+                background: $bronze;
+            }
+        }
+
+        &.place-n {
+            &:hover {
+                background: rgba(255,255,255, 0.3);
+            }
+        }
+
+        .place {
+            border-radius: 50%;
+            height: $medal-size;
+            width: $medal-size;
+            line-height: $medal-size;
+            text-align: center;
+            display: inline-block;
+            font-size: 12pt;
+        }
+
+        .name {
+            display: inline-block;
+            font-size: 14pt;
+            padding: 0 15px;
+            width: 250px;
+        }
+
+        .points {
+            display: inline-block;
+            font-size: 10pt;
+            color: rgba(255,255,255, 0.7);
+        }
+    }
+}

@@ -22,6 +22,8 @@ import Lang
 import Lang.Pl as PL
 import Lang.En as EN
 
+import Scoreboard as SB
+
 main : Program Options AppModel Command
 main = 
     Browser.element
@@ -137,7 +139,7 @@ loggedView model =
                 [ onClick (Session S.Logout) ] 
                 [ text ((Auth.user >> Auth.userName) model.authSession) ]
             ]
-        content = div [ class "content" ] [ text "Hello" ]
+        content = div [ class "content" ] [ SB.testView ]
     in
         div [ class "logged-container" ]
             [ header
