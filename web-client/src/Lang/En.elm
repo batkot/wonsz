@@ -6,7 +6,7 @@ dictionary : Dict
 dictionary = 
     { loginPlaceholder = "Username"
     , passwordPlaceholder = "Password"
-    , loginAction = "Log in"
+    , loginAction = "Sign in"
     , badCredentialsMessage = "Bad credentials"
     , connectionErrorMessage = "Connection problem"
     }

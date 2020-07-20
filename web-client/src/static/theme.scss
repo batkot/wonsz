@@ -9,5 +9,35 @@
 body {
     margin: 0;
     padding:0;
+    background-image: linear-gradient(to bottom right, $yellow, $green);
+    color: $darkest;
 }
 
+.logged-container {
+    max-width: 900px;
+    position: relative;
+    margin: auto;
+    overflow-x: hidden;
+
+    min-height: 100vh;
+    background: rgba(255,255,255, 0.8); 
+    box-shadow: 0 0 13px 0 rgba(0,0,0,0.3);
+
+    .header {
+        padding: 5px;
+        width: 100%;
+        position: sticky;
+        background: $white;
+        top: 0;
+
+        img {
+            max-width: 100px;
+            display: inline-block;
+        }
+    }
+
+    .content {
+        width: 100%;
+        min-height: 100%;
+    }
+}

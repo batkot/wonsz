@@ -10,14 +10,14 @@ import Session as S
 
 import IO.LocalStorage as LS
 
-import Html exposing (Html, text, img, div)
+import Html exposing (Html, text, img, div, span)
 import Html.Attributes exposing (src, class)
 import Html.Events exposing (onClick)
 
 import Cmd.Extra as CE
 import Http.Extra as HE
 
-import Assets exposing (elmLogoUrl)
+import Assets 
 import Lang
 import Lang.Pl as PL
 import Lang.En as EN
@@ -116,8 +116,8 @@ type Command
     | Session S.Command
 
 subscriptions : AppModel -> Sub Command
-subscriptions _ = 
-    LS.listenStringStorageKeyChange "Session"
+subscriptions model = 
+    LS.listenStringStorageKeyChange model.env.sessionSettings.cacheKey
     |> Sub.map (Maybe.map S.ValidateToken >> Maybe.withDefault S.Logout)
     |> Sub.map Session
 
@@ -128,12 +128,18 @@ view app =
         Authorized authorized -> loggedView authorized
 
 loggedView : AuthorizedModel -> Html Command
-loggedView  model = div 
-    [ class "elm-container" ]
-    [ text ((Auth.user >> Auth.userName) model.authSession)
-    , img [ src elmLogoUrl ] []
-    , text "Elm 0.19 Webpack4 Starter" 
-    , div 
-        [ onClick (Session S.Logout) ]
-        [ text "Logout" ]
-    ]
+loggedView model = 
+    let
+        header = div 
+            [ class "header" ]
+            [ img [ src Assets.logo ] [] 
+            , span 
+                [ onClick (Session S.Logout) ] 
+                [ text ((Auth.user >> Auth.userName) model.authSession) ]
+            ]
+        content = div [ class "content" ] [ text "Hello" ]
+    in
+        div [ class "logged-container" ]
+            [ header
+            , content 
+            ]
