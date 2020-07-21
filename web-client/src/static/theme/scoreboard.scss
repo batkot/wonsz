@@ -7,26 +7,74 @@ $bronze: #CD7F32;
 $medal-size: 40px;
 
 .scoreboard {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
+
+    .leader {
+        width: 40%;
+        padding: 0 5%;
+        display: inline-block;
+        vertical-align: top;
+    }
+
+    .rest {
+        width: 20%;
+        padding: 0 5%;
+        display: inline-block;
+    }
+
+    .player-big {
+        position: relative;
+        margin: 0;
+
+        img {
+            width: 100%;
+            height: 100%;
+        }
+
+        .place {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+
+            border-radius: 50%;
+            height: $medal-size;
+            width: $medal-size;
+            line-height: $medal-size;
+            text-align: center;
+            display: inline-block;
+            font-size: 12pt;
+            background: $gold;
+        }
+
+        .name {
+            display: inline-block;
+            font-size: 14pt;
+            padding: 0 15px;
+            width: 200px;
+        }
+
+        .score {
+            margin-right: 10px;
+            display: inline-block;
+            font-size: 10pt;
+            color: rgba(255,255,255, 0.7);
+
+            position: absolute;
+            bottom: 17px;
+            right: 3px;
+        }
+    }
 
     .player {
         margin: 10px;
         border-radius: 2rem;
         cursor: pointer;
         transition: .3s ease-in;
-        border: 1px solid;
-        border-color: rgba(255,255,255, 0.3);
 
         &:hover {
             color: $white;
         }
 
         &.place-1 {
-            border-color: $gold;
-
             &:hover {
                 background: $gold;
             }
@@ -37,8 +85,6 @@ $medal-size: 40px;
         }
 
         &.place-2 {
-            border-color: $silver;
-
             &:hover {
                 background: $silver;
             }
@@ -49,8 +95,6 @@ $medal-size: 40px;
         }
 
         &.place-3 {
-            border-color: $bronze;
-
             &:hover {
                 background: $bronze;
             }
