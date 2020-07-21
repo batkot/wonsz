@@ -3,20 +3,28 @@ module Scoreboard exposing (testView)
 import Html exposing (Html, div, text)
 import Html.Attributes exposing (class)
 
+import Assets exposing (pawelMachay)
+
 type alias Player =
     { name : String
-    , points : Int
+    , score : Int
     , place : Int
+    , avatarUrl : String
+    , points : List Point
+    }
+
+type alias Point =
+    { date : String
     }
 
 players : List Player
 players =
-    [ Player "Paweł Machay" 12 1
-    , Player "Hubert Kotlarz" 10 2
-    , Player "Tomasz Batko" 8 3
-    , Player "Kuba Dziedzic" 7 4
-    , Player "Paweł Szuro" 7 4
-    , Player "Mateusz Wałach" 3 6
+    [ Player "Paweł Machay" 12 1 pawelMachay []
+    , Player "Hubert Kotlarz" 10 2 pawelMachay []
+    , Player "Tomasz Batko" 8 3 pawelMachay []
+    , Player "Kuba Dziedzic" 7 4 pawelMachay [] 
+    , Player "Paweł Szuro" 7 4 pawelMachay []
+    , Player "Mateusz Wałach" 3 6 pawelMachay []
     ]
 
 testView : Html a
@@ -36,5 +44,5 @@ playerView player =
         div [ class "player", class ("place-" ++ placeClass player.place) ]
             [ div [ class "place" ] [ text (String.fromInt player.place) ]
             , div [ class "name" ] [ text player.name ]
-            , div [ class "points" ] [ text (String.fromInt player.points ++ " pkt." )]
+            , div [ class "score" ] [ text (String.fromInt player.score ++ " pkt." )]
             ]

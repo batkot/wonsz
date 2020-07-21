@@ -7,6 +7,7 @@ dictionary =
     { loginPlaceholder = "Username"
     , passwordPlaceholder = "Password"
     , loginAction = "Sign in"
+    , logoutAction = "Log out"
     , badCredentialsMessage = "Bad credentials"
     , connectionErrorMessage = "Connection problem"
     }

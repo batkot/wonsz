@@ -127,17 +127,24 @@ view : AppModel -> Html Command
 view app = 
     case app.model of
         Anonymous loginData -> Html.map Login (Login.view app.env loginData)
-        Authorized authorized -> loggedView authorized
+        Authorized authorized -> loggedView app.env authorized
 
-loggedView : AuthorizedModel -> Html Command
-loggedView model = 
+loggedView : Lang.HasDict a -> AuthorizedModel -> Html Command
+loggedView { dict } model = 
     let
         header = div 
             [ class "header" ]
             [ img [ src Assets.logo ] [] 
-            , span 
-                [ onClick (Session S.Logout) ] 
-                [ text ((Auth.user >> Auth.userName) model.authSession) ]
+            , div 
+                [ class "logged-user" ]
+                [ span 
+                    [ class "username" ]
+                    [ text ((Auth.user >> Auth.userName) model.authSession) ]
+                , span 
+                    [ class "logout-btn" 
+                    , onClick (Session S.Logout) ] 
+                    [ text dict.logoutAction ] 
+                ]
             ]
         content = div [ class "content" ] [ SB.testView ]
     in
