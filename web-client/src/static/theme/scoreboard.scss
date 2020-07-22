@@ -6,17 +6,36 @@ $bronze: #CD7F32;
 
 $medal-size: 40px;
 
-.scoreboard {
+@media screen and (max-width: 500px) {
+    .leader {
+        margin: 0;
+        width: 100%;
+    }
+
+    .rest {
+        width: 100%;
+    }
+}
+
+@media screen and (min-width: 500px) {
     .leader {
         margin-left: 12.5%;
         width: 50%;
+    }
+
+    .rest {
+        width: 25%;
+    }
+}
+
+.scoreboard {
+    .leader {
         padding: 0;
         display: inline-block;
         vertical-align: top;
     }
 
     .rest {
-        width: 25%;
         margin: 0;
         display: inline-block;
     }
@@ -46,6 +65,7 @@ $medal-size: 40px;
         width: 100%;
         height: 100%;
         transition: .3s ease-out;
+        vertical-align: middle;
     }
 
     .place {
