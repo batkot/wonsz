@@ -1,12 +1,24 @@
-module Assets exposing (elmLogoUrl, logo, pawelMachay)
+module Assets exposing (logo, makkay, btk, hub, szuro, kuba, mateusz)
 
 import WebpackAsset as WA
-
-elmLogoUrl : String
-elmLogoUrl = WA.assetUrl "./static/images/elm-logo.png"
 
 logo : String
 logo = WA.assetUrl "./static/images/logo-tmp.png"
 
-pawelMachay : String
-pawelMachay = WA.assetUrl "./static/images/makkay.jpg"
+makkay : String
+makkay = WA.assetUrl "./static/images/makkay.jpg"
+
+btk : String
+btk = WA.assetUrl "./static/images/btk.jpg"
+
+hub : String
+hub = WA.assetUrl "./static/images/hubert.jpg"
+
+szuro : String
+szuro = WA.assetUrl "./static/images/szuro.jpg"
+
+kuba : String
+kuba = WA.assetUrl "./static/images/kuba.jpg"
+
+mateusz : String
+mateusz = WA.assetUrl "./static/images/mateusz.jpg"

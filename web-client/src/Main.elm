@@ -130,7 +130,7 @@ view app =
         Authorized authorized -> loggedView app.env authorized
 
 loggedView : Lang.HasDict a -> AuthorizedModel -> Html Command
-loggedView { dict } model = 
+loggedView d model = 
     let
         header = div 
             [ class "header" ]
@@ -143,10 +143,10 @@ loggedView { dict } model =
                 , span 
                     [ class "logout-btn" 
                     , onClick (Session S.Logout) ] 
-                    [ text dict.logoutAction ] 
+                    [ text d.dict.logoutAction ] 
                 ]
             ]
-        content = div [ class "content" ] [ SB.testView ]
+        content = div [ class "content" ] [ SB.testView d ]
     in
         div [ class "logged-container" ]
             [ header

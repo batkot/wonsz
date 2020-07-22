@@ -7,131 +7,164 @@ $bronze: #CD7F32;
 $medal-size: 40px;
 
 .scoreboard {
-
     .leader {
-        width: 40%;
-        padding: 0 5%;
+        margin-left: 12.5%;
+        width: 50%;
+        padding: 0;
         display: inline-block;
         vertical-align: top;
     }
 
     .rest {
-        width: 20%;
-        padding: 0 5%;
+        width: 25%;
+        margin: 0;
         display: inline-block;
     }
 
-    .player-big {
-        position: relative;
-        margin: 0;
+    .suckers {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+    }
+}
 
+.player-big {
+    position: relative;
+    margin: 0;
+    cursor: pointer;
+    overflow: hidden;
+
+    &:hover {
+        box-shadow: 0 0 13px 0 rgba(0,0,0,0.4);
         img {
-            width: 100%;
-            height: 100%;
-        }
-
-        .place {
-            position: absolute;
-            bottom: 10px;
-            left: 10px;
-
-            border-radius: 50%;
-            height: $medal-size;
-            width: $medal-size;
-            line-height: $medal-size;
-            text-align: center;
-            display: inline-block;
-            font-size: 12pt;
-            background: $gold;
-        }
-
-        .name {
-            display: inline-block;
-            font-size: 14pt;
-            padding: 0 15px;
-            width: 200px;
-        }
-
-        .score {
-            margin-right: 10px;
-            display: inline-block;
-            font-size: 10pt;
-            color: rgba(255,255,255, 0.7);
-
-            position: absolute;
-            bottom: 17px;
-            right: 3px;
+            transform: scale(1.1);
         }
     }
 
-    .player {
-        margin: 10px;
-        border-radius: 2rem;
-        cursor: pointer;
-        transition: .3s ease-in;
+    img {
+        width: 100%;
+        height: 100%;
+        transition: .3s ease-out;
+    }
 
-        &:hover {
-            color: $white;
-        }
+    .place {
+        position: absolute;
+        bottom: 10px;
+        left: 10px;
+
+        border-radius: 50%;
+        height: $medal-size;
+        width: $medal-size;
+        line-height: $medal-size;
+        text-align: center;
+        display: inline-block;
+        font-size: 12pt;
 
         &.place-1 {
-            &:hover {
-                background: $gold;
-            }
-
-            .place {
-                background: $gold;
-            }
+            background: $gold;
         }
 
         &.place-2 {
-            &:hover {
-                background: $silver;
-            }
-
-            .place {
-                background: $silver;
-            }
+            background: $silver;
         }
 
         &.place-3 {
-            &:hover {
-                background: $bronze;
-            }
-
-            .place {
-                background: $bronze;
-            }
+            background: $bronze;
         }
 
         &.place-n {
-            &:hover {
-                background: rgba(255,255,255, 0.3);
-            }
+            background: rgba(255,255,255, 0.3);
+        }
+    }
+
+    .name {
+        display: inline-block;
+        font-size: 14pt;
+        padding: 0 15px;
+        width: 200px;
+    }
+
+    .score {
+        margin-right: 10px;
+        display: inline-block;
+        font-size: 10pt;
+        color: $white;
+        font-weight: 600;
+
+        position: absolute;
+        bottom: 17px;
+        right: 3px;
+    }
+}
+
+.player {
+    margin: 10px;
+    border-radius: 2rem;
+    cursor: pointer;
+    transition: .3s ease-in;
+
+    &:hover {
+        color: $white;
+    }
+
+    &.place-1 {
+        &:hover {
+            background: $gold;
         }
 
         .place {
-            border-radius: 50%;
-            height: $medal-size;
-            width: $medal-size;
-            line-height: $medal-size;
-            text-align: center;
-            display: inline-block;
-            font-size: 12pt;
+            background: $gold;
+        }
+    }
+
+    &.place-2 {
+        &:hover {
+            background: $silver;
         }
 
-        .name {
-            display: inline-block;
-            font-size: 14pt;
-            padding: 0 15px;
-            width: 200px;
+        .place {
+            background: $silver;
+        }
+    }
+
+    &.place-3 {
+        &:hover {
+            background: $bronze;
         }
 
-        .score {
-            margin-right: 10px;
-            display: inline-block;
-            font-size: 10pt;
-            color: rgba(255,255,255, 0.7);
+        .place {
+            background: $bronze;
         }
+    }
+
+    &.place-n {
+        &:hover {
+            background: rgba(255,255,255, 0.3);
+        }
+    }
+
+    .place {
+        border-radius: 50%;
+        height: $medal-size;
+        width: $medal-size;
+        line-height: $medal-size;
+        text-align: center;
+        display: inline-block;
+        font-size: 12pt;
+    }
+
+    .name {
+        display: inline-block;
+        font-size: 14pt;
+        padding: 0 15px;
+        width: 200px;
+    }
+
+    .score {
+        margin-right: 10px;
+        display: inline-block;
+        font-size: 10pt;
+        color: rgba(255,255,255, 0.7);
     }
 }

@@ -6,7 +6,7 @@ env.authToken = window.localStorage.getItem(env.sessionCacheKey);
 
 const initSettings = 
     { 
-        node: document.getElementById('elm-container'),
+        node: document.getElementById('app-container'),
         flags: env
     };
 const app = Elm.Main.init(initSettings);

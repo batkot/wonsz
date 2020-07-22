@@ -10,4 +10,5 @@ dictionary =
     , logoutAction = "Wyloguj"
     , badCredentialsMessage = "Złe dane"
     , connectionErrorMessage = "Brak połączenia"
+    , pointLabel = "pkt."
     }

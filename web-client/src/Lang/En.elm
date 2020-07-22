@@ -10,4 +10,5 @@ dictionary =
     , logoutAction = "Log out"
     , badCredentialsMessage = "Bad credentials"
     , connectionErrorMessage = "Connection problem"
+    , pointLabel = "pt"
     }

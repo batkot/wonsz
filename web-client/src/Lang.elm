@@ -7,6 +7,7 @@ type alias Dict =
     , logoutAction : String
     , badCredentialsMessage : String
     , connectionErrorMessage : String
+    , pointLabel : String
     }
 
 type alias HasDict a = { a | dict : Dict } 
