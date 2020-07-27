@@ -9,7 +9,7 @@ import Network.Wai.Middleware.Cors (cors, simpleCorsResourcePolicy, CorsResource
 import Servant.Auth.Server (generateKey)
 
 import Options (Options, getOptions, optPort, optAllowedCorsOrigin)
-import Server (app)
+import Wonsz.Server (app)
 import Data.String (fromString)
 
 main :: IO ()
