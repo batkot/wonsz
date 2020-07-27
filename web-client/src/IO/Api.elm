@@ -23,7 +23,7 @@ type alias Authorized res = Requires AuthSession (HttpRequest res)
 login : Username -> Password -> HttpRequest AuthTokenString
 login username password = 
     let loginBody = JE.object
-            [ ("user", JE.string username)
+            [ ("username", JE.string username)
             , ("password", JE.string password)]
             |> jsonBody
     in makeRequest (Url "/login") Post JD.string loginBody
