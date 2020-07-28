@@ -20,6 +20,7 @@ description:         Please see the README on GitHub at <https://github.com/batk
 
 dependencies:
 - base >= 4.7 && < 5
+- text >= 1.2 && < 2
 # Servant Api dependencies
 - bytestring >= 0.10 && < 1.0
 - servant-server >= 0.16 && < 0.17

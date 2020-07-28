@@ -26,7 +26,7 @@ login username password =
             [ ("username", JE.string username)
             , ("password", JE.string password)]
             |> jsonBody
-    in makeRequest (Url "/login") Post JD.string loginBody
+    in makeRequest (Url "/auth/login") Post JD.string loginBody
 
 type alias OverviewDto =
     { something : String
@@ -39,10 +39,10 @@ overviewDtoDecoder =
 
 overview : Authorized OverviewDto
 overview = 
-    makeRequest (Url "/overview") Get overviewDtoDecoder emptyBody
+    makeRequest (Url "/api/overview") Get overviewDtoDecoder emptyBody
     |> authorize
 
 renewToken : Authorized AuthTokenString
 renewToken = 
-    makeRequest (Url "/renewToken") Post JD.string emptyBody
+    makeRequest (Url "/auth/renewToken") Post JD.string emptyBody
     |> authorize

@@ -13,6 +13,8 @@ module Wonsz.Server.Authentication
     , AuthToken
     , authApi
     , AuthApi
+
+    , protected 
     ) where
 
 import Servant (JSON, ReqBody, Get, Post, (:>), (:<|>)(..), err401, err403, ServerError, ServerT, Handler)
@@ -52,7 +54,6 @@ instance ToJSON AuthToken where
 
 instance UserMonad Handler
 
--- API
 data LoginRequest = LoginRequest
     { username :: !String
     , password :: !String
@@ -128,8 +129,7 @@ type AuthTokenCreator m = UserDescription -> m (Maybe AuthToken)
 createJWT 
      :: MonadIO m 
      => JWTSettings 
-     -> UserDescription 
-     -> m (Maybe AuthToken)
+     -> AuthTokenCreator m
 createJWT jwt UserDescription{..} = liftIO $ do
      time <- addUTCTime (3600 :: NominalDiffTime) <$> getCurrentTime
      token <- fmap AuthToken <$> makeJWT (AuthenticatedUser userId userName) jwt (Just time)
