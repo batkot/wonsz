@@ -11,21 +11,24 @@ module Wonsz.Server.Authentication
     , getAuthenticatedUserName
 
     , AuthToken
+    , rawToken
     , authApi
     , AuthApi
+
+    , LoginRequest(..)
 
     , protected 
     ) where
 
 import Servant (JSON, ReqBody, Get, Post, (:>), (:<|>)(..), err401, err403, ServerError, ServerT, Handler)
 import Servant.Auth.Server (FromJWT, ToJWT, JWTSettings, AuthResult(..), Auth, makeJWT)
-import Data.Aeson (FromJSON, ToJSON(..))
+import Data.Aeson (FromJSON(..), ToJSON(..))
 
 import GHC.Generics (Generic)
 
 import Data.Time (NominalDiffTime, getCurrentTime, addUTCTime)
 import Data.ByteString.Lazy.Internal as BS
-import Data.ByteString.Lazy.UTF8 (toString)
+import Data.ByteString.Lazy.UTF8 (toString, fromString)
 
 import Control.Monad.Error.Class (MonadError, throwError)
 import Control.Monad.IO.Class (MonadIO, liftIO)
@@ -52,6 +55,9 @@ instance ToJWT AuthenticatedUser
 instance ToJSON AuthToken where
   toJSON = toJSON . toString . unAuthToken 
 
+instance FromJSON AuthToken where
+  parseJSON val = AuthToken . fromString <$> parseJSON val
+
 instance UserMonad Handler
 
 data LoginRequest = LoginRequest
@@ -63,6 +69,9 @@ instance FromJSON LoginRequest
 instance ToJSON LoginRequest
 
 newtype AuthToken = AuthToken { unAuthToken :: BS.ByteString } 
+
+rawToken :: AuthToken -> BS.ByteString
+rawToken = unAuthToken
 
 type LoginApi = "login" :> ReqBody '[JSON] LoginRequest :> Post '[JSON] AuthToken
 type SessionApi = "renewToken" :> Post '[JSON] AuthToken

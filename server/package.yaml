@@ -70,5 +70,12 @@ tests:
     - -with-rtsopts=-N
     dependencies:
     - wonsz
+    - servant-client >= 0.16 && < 1
+    - servant-auth-client >= 0.4 && < 1
+    - http-client >= 0.6 && < 1
+    - http-types >= 0.12 && < 1
+    - warp >= 3.2 && < 3.3
     - tasty >= 1.2 && < 2
     - tasty-discover >= 4.2 && < 5
+    - HUnit >= 1.6 && < 2
+    - tasty-hunit >= 0.10 && < 1

@@ -3,7 +3,7 @@
 {-# LANGUAGE DataKinds #-}
 
 module Wonsz.Server 
-    ( app )
+    ( app, Api )
     where
 
 import Wonsz.Server.Authentication (AuthApi, authApi)

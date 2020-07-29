@@ -7,6 +7,9 @@
 module Wonsz.Server.Season 
     ( SeasonApi
     , seasonApi
+
+    , SeasonOverview(..)
+    , ParticipantOverview (..)
     ) where
 
 import Servant ((:>), Get, JSON, ServerT, ServerError)
@@ -15,7 +18,7 @@ import Wonsz.Server.Authentication (protected, AuthenticatedUser)
 
 import GHC.Generics
 import Data.Text (Text)
-import Data.Aeson (ToJSON)
+import Data.Aeson (ToJSON, FromJSON)
 import Control.Monad.Error.Class (MonadError)
 import Control.Monad.IO.Class (MonadIO)
 
@@ -24,6 +27,7 @@ data SeasonOverview = SeasonOverview
     } deriving (Show, Eq, Generic)
 
 instance ToJSON SeasonOverview 
+instance FromJSON SeasonOverview 
 
 data ParticipantOverview = ParticipantOverview
     { participantName :: !Text
@@ -33,6 +37,7 @@ data ParticipantOverview = ParticipantOverview
     } deriving (Show, Eq, Generic)
 
 instance ToJSON ParticipantOverview 
+instance FromJSON ParticipantOverview
 
 type SeasonApi auth = Auth auth AuthenticatedUser :> "overview" :> Get '[JSON] SeasonOverview
 
