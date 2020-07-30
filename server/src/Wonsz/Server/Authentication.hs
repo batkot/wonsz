@@ -58,8 +58,6 @@ instance ToJSON AuthToken where
 instance FromJSON AuthToken where
   parseJSON val = AuthToken . fromString <$> parseJSON val
 
-instance UserMonad Handler
-
 data LoginRequest = LoginRequest
     { username :: !String
     , password :: !String

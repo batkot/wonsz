@@ -24,13 +24,20 @@ import Wonsz.Server (app, Api)
 import Wonsz.Server.Authentication (AuthToken, LoginRequest(..), rawToken)
 import Wonsz.Server.Season (SeasonOverview(..))
 
+import Wonsz.Users (UserMonad(..), User(..))
+
+import Control.Monad.Identity (IdentityT, runIdentityT)
+
 makeWonszAppResource :: IO (Port, ThreadId)
 makeWonszAppResource = do
     (port, socket) <- Warp.openFreePort
     putStrLn $ "Running on " <> show port 
     jwt <- generateKey
-    threadId <- forkIO $ Warp.runSettingsSocket defaultSettings socket (app id jwt)
+    threadId <- forkIO $ Warp.runSettingsSocket defaultSettings socket (app runIdentityT jwt)
     return (port, threadId)
+
+instance Monad m => UserMonad (IdentityT m) where
+  getUser userName = return . Just $ User 1 userName "password"
 
 freeWonszAppResource :: (Port, ThreadId) -> IO ()
 freeWonszAppResource = killThread . snd

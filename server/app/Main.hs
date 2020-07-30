@@ -1,3 +1,6 @@
+{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedStrings #-}
 
@@ -12,6 +15,12 @@ import Options (Options, getOptions, optPort, optAllowedCorsOrigin)
 import Wonsz.Server (app)
 import Data.String (fromString)
 
+import Control.Monad.IO.Class (MonadIO(..))
+import Control.Monad.Reader.Class (MonadReader(..))
+import Control.Monad.Reader (runReaderT)
+
+import Wonsz.Users (User(..), UserMonad(..))
+
 main :: IO ()
 main = 
     getOptions >>= \case 
@@ -23,8 +32,10 @@ runServer opt = do
     let policy = createCorsPolicy $ optAllowedCorsOrigin opt
     putStrLn $ "Running on port: " <> show (optPort opt)
     jwt <- generateKey
-    run (optPort opt) $ cors (const (Just policy)) $ app id jwt
-    
+    run (optPort opt) $ cors (const (Just policy)) $ app (`runReaderT` users) jwt
+
+users :: [User]
+users = [ User 1 "Btk" "password" ]
 
 createCorsPolicy :: Maybe String -> CorsResourcePolicy 
 createCorsPolicy origin = 
@@ -32,3 +43,9 @@ createCorsPolicy origin =
   where
     corsOrigin allowedOrigin = ([fromString allowedOrigin], True) 
 
+instance (Monad m, MonadReader [User] m) => UserMonad m where
+  getUser userName = safeHead . filter ((==) userName . uName) <$> ask
+
+safeHead :: [a] -> Maybe a 
+safeHead [] = Nothing
+safeHead x = Just . head $ x
