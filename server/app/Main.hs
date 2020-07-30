@@ -23,7 +23,7 @@ runServer opt = do
     let policy = createCorsPolicy $ optAllowedCorsOrigin opt
     putStrLn $ "Running on port: " <> show (optPort opt)
     jwt <- generateKey
-    run (optPort opt) $ cors (const (Just policy)) $ app jwt
+    run (optPort opt) $ cors (const (Just policy)) $ app id jwt
     
 
 createCorsPolicy :: Maybe String -> CorsResourcePolicy 

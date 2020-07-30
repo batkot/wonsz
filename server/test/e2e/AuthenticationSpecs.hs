@@ -29,7 +29,7 @@ makeWonszAppResource = do
     (port, socket) <- Warp.openFreePort
     putStrLn $ "Running on " <> show port 
     jwt <- generateKey
-    threadId <- forkIO $ Warp.runSettingsSocket defaultSettings socket (app jwt)
+    threadId <- forkIO $ Warp.runSettingsSocket defaultSettings socket (app id jwt)
     return (port, threadId)
 
 freeWonszAppResource :: (Port, ThreadId) -> IO ()
