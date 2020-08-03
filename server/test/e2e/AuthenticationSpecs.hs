@@ -8,9 +8,12 @@ import Control.Concurrent (forkIO, killThread, ThreadId)
 import Data.Either
 
 import qualified Data.ByteString.Lazy as BSL
+import qualified Data.ByteString.Lazy.Char8 as BSLC
 
 import Test.Tasty (TestTree, testGroup, withResource)
 import Test.Tasty.HUnit (testCase, (@?=), (@?))
+import Test.Tasty.QuickCheck (testProperty, ioProperty)
+import Test.QuickCheck (Arbitrary(..), getPrintableString)
 import Network.Wai.Handler.Warp as Warp
 
 import Servant (Proxy(..), (:<|>)(..))
@@ -31,7 +34,6 @@ import Control.Monad.Identity (IdentityT, runIdentityT)
 makeWonszAppResource :: IO (Port, ThreadId)
 makeWonszAppResource = do
     (port, socket) <- Warp.openFreePort
-    putStrLn $ "Running on " <> show port 
     jwt <- generateKey
     threadId <- forkIO $ Warp.runSettingsSocket defaultSettings socket (app runIdentityT jwt)
     return (port, threadId)
@@ -87,4 +89,15 @@ test_tests =
                     let newToken = Token . BSL.toStrict . rawToken $ renewedToken
                     result <- runClientM (getOverview c newToken) (env c)
                     isRight result @? "Should get result"
+
+                , testProperty "Given fake token should return 401" $ \(BadAuthToken badTokenString) -> ioProperty $ do 
+                    c <- client
+                    let badToken = Token . BSL.toStrict . BSLC.pack $ badTokenString
+                    Left (FailureResponse _ (Response responseStatus _ _ _)) <- runClientM (getOverview c badToken) (env c)
+                    return $ responseStatus == status401
                 ]
+
+newtype BadAuthToken = BadAuthToken { getToken :: String } deriving (Show)
+
+instance Arbitrary BadAuthToken where
+  arbitrary = BadAuthToken . mconcat . lines . getPrintableString <$> arbitrary
