@@ -2,3 +2,4 @@
 wonsz.cabal
 stack.yaml.lock
 *~
+set-hoogle.sh
