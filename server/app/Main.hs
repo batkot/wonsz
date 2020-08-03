@@ -14,6 +14,7 @@ import Servant.Auth.Server (generateKey)
 import Options (Options, getOptions, optPort, optAllowedCorsOrigin)
 import Wonsz.Server (app)
 import Data.String (fromString)
+import Data.List (find)
 
 import Control.Monad.IO.Class (MonadIO(..))
 import Control.Monad.Reader.Class (MonadReader(..))
@@ -44,8 +45,4 @@ createCorsPolicy origin =
     corsOrigin allowedOrigin = ([fromString allowedOrigin], True) 
 
 instance (Monad m, MonadReader [User] m) => UserMonad m where
-  getUser userName = safeHead . filter ((==) userName . uName) <$> ask
-
-safeHead :: [a] -> Maybe a 
-safeHead [] = Nothing
-safeHead x = Just . head $ x
+  getUser userName = find ((==) userName . uName) <$> ask
