@@ -12,7 +12,20 @@ $medal-size: 40px;
         width: 100%;
     }
 
+    .player {
+        overflow: unset !important;
+
+        img {
+            max-height: 150px;
+            object-fit: cover;
+        }
+    }
+
     .rest {
+        width: 100%;
+    }
+
+    .suckers .player {
         width: 100%;
     }
 }
@@ -26,6 +39,86 @@ $medal-size: 40px;
     .rest {
         width: 25%;
     }
+
+    .suckers .player {
+        margin: 10px;
+        border-radius: 2rem;
+        cursor: pointer;
+        transition: .3s ease-in;
+        position: initial;
+
+        &:hover {
+            color: $white;
+        }
+
+        &.place-1 {
+            &:hover {
+                background: $gold;
+            }
+
+            .place {
+                background: $gold;
+            }
+        }
+
+        &.place-2 {
+            &:hover {
+                background: $silver;
+            }
+
+            .place {
+                background: $silver;
+            }
+        }
+
+        &.place-3 {
+            &:hover {
+                background: $bronze;
+            }
+
+            .place {
+                background: $bronze;
+            }
+        }
+
+        &.place-n {
+            &:hover {
+                background: rgba(255,255,255, 0.3);
+            }
+        }
+
+        .place {
+            position: initial;
+            border-radius: 50%;
+            height: $medal-size;
+            width: $medal-size;
+            line-height: $medal-size;
+            text-align: center;
+            display: inline-block;
+            font-size: 12pt;
+        }
+
+        .name {
+            position: initial;
+            display: inline-block;
+            font-size: 14pt;
+            padding: 0 15px;
+            width: 200px;
+        }
+
+        .score {
+            position: initial;
+            margin-right: 10px;
+            display: inline-block;
+            font-size: 10pt;
+            color: rgba(255,255,255, 0.7);
+        }
+
+        img {
+            display: none;
+        }
+    }
+
 }
 
 .scoreboard {
@@ -48,7 +141,7 @@ $medal-size: 40px;
     }
 }
 
-.player-big {
+.player {
     position: relative;
     margin: 0;
     cursor: pointer;
@@ -99,10 +192,7 @@ $medal-size: 40px;
     }
 
     .name {
-        display: inline-block;
-        font-size: 14pt;
-        padding: 0 15px;
-        width: 200px;
+        display: none;
     }
 
     .score {
@@ -118,73 +208,3 @@ $medal-size: 40px;
     }
 }
 
-.player {
-    margin: 10px;
-    border-radius: 2rem;
-    cursor: pointer;
-    transition: .3s ease-in;
-
-    &:hover {
-        color: $white;
-    }
-
-    &.place-1 {
-        &:hover {
-            background: $gold;
-        }
-
-        .place {
-            background: $gold;
-        }
-    }
-
-    &.place-2 {
-        &:hover {
-            background: $silver;
-        }
-
-        .place {
-            background: $silver;
-        }
-    }
-
-    &.place-3 {
-        &:hover {
-            background: $bronze;
-        }
-
-        .place {
-            background: $bronze;
-        }
-    }
-
-    &.place-n {
-        &:hover {
-            background: rgba(255,255,255, 0.3);
-        }
-    }
-
-    .place {
-        border-radius: 50%;
-        height: $medal-size;
-        width: $medal-size;
-        line-height: $medal-size;
-        text-align: center;
-        display: inline-block;
-        font-size: 12pt;
-    }
-
-    .name {
-        display: inline-block;
-        font-size: 14pt;
-        padding: 0 15px;
-        width: 200px;
-    }
-
-    .score {
-        margin-right: 10px;
-        display: inline-block;
-        font-size: 10pt;
-        color: rgba(255,255,255, 0.7);
-    }
-}

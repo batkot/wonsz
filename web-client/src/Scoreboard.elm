@@ -18,7 +18,7 @@ type alias Player =
     }
 
 type alias Point =
-    { date : String
+    { date : String 
     }
 
 players : List Player
@@ -37,13 +37,13 @@ testView d = view d players
 view : HasDict x -> List Player -> Html a
 view d p = 
     let leader = List.head p
-            |> Maybe.map (bigPlayerView d)
+            |> Maybe.map (playerView d)
             |> Maybe.withDefault HE.empty
         rest = List.tail p
             |> Maybe.withDefault []
         podium = rest
             |> List.take 2
-            |> List.map (bigPlayerView d)
+            |> List.map (playerView d)
         suckers = rest
             |> List.drop 2
             |> List.map (playerView d)
@@ -60,14 +60,6 @@ view d p =
             suckers
         ]
 
-bigPlayerView : HasDict x -> Player -> Html a
-bigPlayerView { dict } player = 
-    div [ class "player-big" ]
-        [ img [ src player.avatarUrl ] []
-        , placeView player.place
-        , div [ class "score" ] [ text (String.fromInt player.score ++ " " ++ dict.pointLabel) ]
-        ]
-
 placeView : Int -> Html a
 placeView place = 
     div [ class "place", class (placeClass place) ] [ text (String.fromInt place) ]
@@ -80,7 +72,8 @@ placeClass place =
 playerView : HasDict x -> Player -> Html a
 playerView { dict } player = 
         div [ class "player", class (placeClass player.place) ]
-            [ placeView player.place
+            [ img [ src player.avatarUrl ] []
+            , placeView player.place
             , div [ class "name" ] [ text player.name ]
             , div [ class "score" ] [ text (String.fromInt player.score ++ " " ++ dict.pointLabel )]
             ]
