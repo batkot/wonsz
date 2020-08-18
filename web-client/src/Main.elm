@@ -144,7 +144,7 @@ view app =
         Anonymous loginData -> Html.map Login (Login.view app.env loginData)
         Authorized authorized -> loggedView app.env authorized
 
-loggedView : Lang.HasDict a -> AuthorizedModel -> Html Command
+loggedView : HE.HasBaseUrl (Lang.HasDict a) -> AuthorizedModel -> Html Command
 loggedView d model = 
     let
         header = div 

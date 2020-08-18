@@ -58,7 +58,7 @@ data WonszClient = WonszClient
 
 createApiClient :: Port -> IO WonszClient
 createApiClient port = do
-    let overviewClient :<|> (renewTokenClient :<|> loginClient) = client testApi
+    let overviewClient :<|> (renewTokenClient :<|> loginClient) :<|> _ = client testApi
     baseUrl <- parseBaseUrl "http://localhost"
     manager <- newManager defaultManagerSettings
     let clientEnv = mkClientEnv manager (baseUrl { baseUrlPort = port })

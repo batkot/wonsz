@@ -51,10 +51,10 @@ overviewHandler :: Monad m => m SeasonOverview
 overviewHandler = return $ SeasonOverview participants
     where
       participants = 
-          [ ParticipantOverview "Paweł Machay" 12 1 "static/images/makkay.jpg"
-          , ParticipantOverview "Hubert Kotlarz" 10 2 "static/images/hubert.jpg"
-          , ParticipantOverview "Tomasz Batko" 8 3 "static/images/btk.jpg"
-          , ParticipantOverview "Jakub Dziedzic" 7 4 "static/images/kuba.jpg"
-          , ParticipantOverview "Paweł Szuro" 6 5 "static/images/szuro.jpg"
-          , ParticipantOverview "Mateusz Wałach" 3 6 "static/images/mateusz.jpg"
+          [ ParticipantOverview "Paweł Machay" 12 1 "/static/makkay.jpg"
+          , ParticipantOverview "Hubert Kotlarz" 10 2 "/static/hubert.jpg"
+          , ParticipantOverview "Tomasz Batko" 8 3 "/static/btk.jpg"
+          , ParticipantOverview "Jakub Dziedzic" 7 4 "/static/kuba.jpg"
+          , ParticipantOverview "Paweł Szuro" 6 5 "/static/szuro.jpg"
+          , ParticipantOverview "Mateusz Wałach" 3 6 "/static/mateusz.jpg"
           ] 
