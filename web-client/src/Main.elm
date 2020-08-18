@@ -81,9 +81,20 @@ update cmd app =
                         Fx.runCompFx Fx.runLocalStorageFx (Fx.runHttpFx app.env.baseUrl)
                         |> Fx.runCompFx Fx.runCommandFx 
                     (newSession, newCmd) = Fx.interpret Cmd.none fxInterpreter fxSession
-                    newModel = updateSession m newSession
-                in ({ app | model = newModel }, Cmd.map Session newCmd )
-                
+                    (newModel, x) = updateSession m newSession
+                in ({ app | model = newModel }, Cmd.batch [Cmd.map Session newCmd, x] )
+
+        (Scoreboard scoreboardCmd, Authorized mdl) ->
+                let (newPageModel, newCmd) = 
+                        case mdl.model of
+                            ScoreboardPage m ->
+                                let auth = mdl.authSession 
+                                    fxModel = SB.update auth scoreboardCmd m 
+                                    fxInterpreter = Fx.runHttpFx app.env.baseUrl
+                                in Fx.interpret Cmd.none fxInterpreter fxModel
+                    newModel = { mdl | model = ScoreboardPage newPageModel }
+                in ({ app | model = Authorized newModel }, Cmd.map Scoreboard newCmd )
+
         (_, _) -> (app, Cmd.none)
 
 modelToSession : Model -> S.Session
@@ -92,13 +103,13 @@ modelToSession model =
         Anonymous _ -> S.Anonymous
         Authorized m -> S.Authenticated m.authSession
 
-updateSession : Model -> S.Session -> Model
+updateSession : Model -> S.Session -> (Model, Cmd Command)
 updateSession model session = 
     case (model, session) of
-        (Anonymous l, S.Anonymous) -> Anonymous l
-        (Authorized _, S.Anonymous) -> Anonymous Login.emptyModel
-        (Anonymous _, S.Authenticated s) -> Authorized (AuthorizedModel s)
-        (Authorized m, S.Authenticated s) -> Authorized { m | authSession = s }
+        (Anonymous l, S.Anonymous) -> (Anonymous l, Cmd.none)
+        (Authorized _, S.Anonymous) -> (Anonymous Login.emptyModel, Cmd.none)
+        (Anonymous _, S.Authenticated s) -> (Authorized (AuthorizedModel s (ScoreboardPage SB.initModel)), CE.pure (Scoreboard SB.initCommand))
+        (Authorized m, S.Authenticated s) -> (Authorized { m | authSession = s }, Cmd.none)
 
 type alias AppModel = 
     { env : Environment
@@ -111,11 +122,15 @@ type Model
 
 type alias AuthorizedModel = 
     { authSession : Auth.AuthSession
+    , model : PageModel
     }
+
+type PageModel = ScoreboardPage SB.Model
 
 type Command 
     = Login Login.LoginCmd
     | Session S.Command
+    | Scoreboard SB.Command
 
 subscriptions : AppModel -> Sub Command
 subscriptions model = 
@@ -146,7 +161,10 @@ loggedView d model =
                     [ text d.dict.logoutAction ] 
                 ]
             ]
-        content = div [ class "content" ] [ SB.testView d ]
+        pageView = 
+            case model.model of
+                ScoreboardPage m -> SB.view d m
+        content = div [ class "content" ] [ pageView ]
     in
         div [ class "logged-container" ]
             [ header

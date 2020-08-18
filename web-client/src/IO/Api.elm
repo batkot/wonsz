@@ -2,8 +2,9 @@ module IO.Api exposing
     ( login
     , renewToken
 
-    , overview
-    , OverviewDto
+    , getSeasonOverview
+    , SeasonOverview
+    , SeasonParticipant
     )
 
 import Http exposing (jsonBody, emptyBody)
@@ -28,18 +29,33 @@ login username password =
             |> jsonBody
     in makeRequest (Url "/auth/login") Post JD.string loginBody
 
-type alias OverviewDto =
-    { something : String
+type alias SeasonOverview =
+    { participants : List SeasonParticipant
     }
 
-overviewDtoDecoder : JD.Decoder OverviewDto
-overviewDtoDecoder = 
-    JD.succeed OverviewDto
-    |> JDP.required "something" JD.string
+type alias SeasonParticipant =
+    { name : String
+    , score : Int
+    , place : Int
+    , avatarUrl : String
+    }
 
-overview : Authorized OverviewDto
-overview = 
-    makeRequest (Url "/api/overview") Get overviewDtoDecoder emptyBody
+seasonOverviewDecoder : JD.Decoder SeasonOverview
+seasonOverviewDecoder = 
+    JD.succeed SeasonOverview
+    |> JDP.required "participants" (JD.list seasonParticipantDecoder)
+
+seasonParticipantDecoder : JD.Decoder SeasonParticipant
+seasonParticipantDecoder = 
+    JD.succeed SeasonParticipant
+    |> JDP.required "participantName" JD.string
+    |> JDP.required "participantScore" JD.int
+    |> JDP.required "participantPlace" JD.int
+    |> JDP.required "participantAvatarUrl" JD.string
+
+getSeasonOverview : Authorized SeasonOverview
+getSeasonOverview = 
+    makeRequest (Url "/api/overview") Get seasonOverviewDecoder emptyBody
     |> authorize
 
 renewToken : Authorized AuthTokenString
