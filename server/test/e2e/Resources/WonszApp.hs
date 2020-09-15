@@ -1,4 +1,5 @@
 {-# LANGUAGE DataKinds #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module Resources.WonszApp 
     ( withWonszApp
@@ -11,6 +12,8 @@ module Resources.WonszApp
     , validLoginRequest 
     , invalidLoginRequest 
     ) where
+
+import Data.ByteString.Lazy.UTF8 (fromString)
 
 import Test.Tasty (TestTree, testGroup, withResource)
 
@@ -81,4 +84,4 @@ invalidLoginRequest :: LoginRequest
 invalidLoginRequest = LoginRequest userName badPassword
 
 instance Monad m => UserMonad (IdentityT m) where
-  getUser userName = return . Just $ User 1 userName goodPassword
+  getUser userName = return . Just $ User 1 userName (fromString goodPassword) "" ""

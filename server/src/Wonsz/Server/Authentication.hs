@@ -5,6 +5,8 @@
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE LambdaCase #-}
 
+{-# LANGUAGE OverloadedStrings #-}
+
 module Wonsz.Server.Authentication
     ( AuthenticatedUser
     , getAuthenticatedUserId
@@ -34,6 +36,7 @@ import Control.Monad.Error.Class (MonadError, throwError)
 import Control.Monad.IO.Class (MonadIO, liftIO)
 
 import Wonsz.Users
+import Wonsz.Named
 
 data AuthenticatedUser = AuthenticatedUser
     { auId :: !Int
@@ -72,7 +75,9 @@ rawToken :: AuthToken -> BS.ByteString
 rawToken = unAuthToken
 
 type LoginApi = "login" :> ReqBody '[JSON] LoginRequest :> Post '[JSON] AuthToken
-type SessionApi = "renewToken" :> Post '[JSON] AuthToken
+type SessionApi = 
+    "renewToken" :> Post '[JSON] AuthToken
+    :<|> "changePassword" :> Get '[JSON] ()
 
 type AuthApi auth = (Auth auth AuthenticatedUser :> SessionApi) :<|> LoginApi
 
@@ -82,7 +87,7 @@ authApi
     => MonadError ServerError m
     => JWTSettings 
     -> ServerT (AuthApi auth) m
-authApi jwt = renewTokenHandler tokenCreator :<|> loginHandler tokenCreator 
+authApi jwt = sessionApi tokenCreator :<|> loginHandler tokenCreator 
   where
     tokenCreator = createJWT jwt
 
@@ -96,7 +101,7 @@ loginHandler
     -> LoginRequest
     -> m AuthToken
 loginHandler createToken LoginRequest{..} =  do
-    user <- login bullshitCrypto username password
+    user <- login bullshitCrypto username (fromString password)
     token <- case user of
         Nothing -> throwError err401
         Just u -> createToken u
@@ -112,6 +117,15 @@ protected
 protected action (Authenticated user) = action user
 protected _ _ = throwError err401
 
+sessionApi 
+    :: UserMonad m 
+    => MonadError ServerError m
+    => AuthTokenCreator m
+    -> AuthResult AuthenticatedUser
+    -> ServerT SessionApi m
+sessionApi tokenCreator (Authenticated user) = renewToken tokenCreator user :<|> changePasswordHandler user
+sessionApi _ _ = throwError err401 :<|> throwError err401
+
 renewToken 
     :: MonadError ServerError m
     => AuthTokenCreator m
@@ -123,6 +137,22 @@ renewToken createToken user =
         Just token -> return token
   where
     userDescription = UserDescription (getAuthenticatedUserId user) (getAuthenticatedUserName user)
+
+changePasswordHandler
+    :: UserMonad m 
+    => MonadError ServerError m
+    => AuthenticatedUser 
+    -> m ()
+changePasswordHandler user = 
+    named userId $ \namedUserId ->
+        named request $ \namedRequest -> do
+            proof <- canChangePassword namedUserId namedRequest
+            case proof of 
+                Nothing -> throwError err401
+                Just p -> saveUser $ changePassword bullshitCrypto namedUserId namedRequest p
+  where 
+    userId = auId user
+    request = ChangePasswordRequest (Id userId) "newPassword"
 
 renewTokenHandler 
     :: MonadError ServerError m
