@@ -55,4 +55,4 @@ createCorsPolicy origin =
 instance (Monad m, KeyValueStorage m String User) => UserMonad m where 
     getUser = get 
     saveUser user = set (_userName user) user
-    getById _ = get "Btk"
+    -- getById _ = get "Btk"

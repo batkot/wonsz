@@ -70,7 +70,7 @@ canChangePassword
     :: UserMonad m 
     => Named changerUserId Int
     -> Named changeeUserId ChangePasswordRequest
-    -> m (Maybe (CanChangePassword changerUserId changeeUserId))
+    -> m (Maybe (changerUserId `CanChangePassword` changeeUserId))
 canChangePassword changerUserId changeRequest = 
     if unNamed changerUserId == (unId . xId . unNamed) changeRequest then fmap CanChangePassword <$> getById ((unId . xId . unNamed) changeRequest) else return Nothing
 

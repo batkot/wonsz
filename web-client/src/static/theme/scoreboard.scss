@@ -92,7 +92,8 @@ $medal-size: 40px;
             border-radius: 50%;
             height: $medal-size;
             width: $medal-size;
-            line-height: $medal-size;
+            // :(
+            line-height: $medal-size + 5px;
             text-align: center;
             display: inline-block;
             font-size: 12pt;
@@ -169,7 +170,8 @@ $medal-size: 40px;
         border-radius: 50%;
         height: $medal-size;
         width: $medal-size;
-        line-height: $medal-size;
+        // :(
+        line-height: $medal-size + 5px;
         text-align: center;
         display: inline-block;
         font-size: 12pt;
