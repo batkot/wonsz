@@ -34,7 +34,6 @@ newtype Password = Password { unPassword :: ByteString }
 makePassword :: Text -> Maybe Password
 makePassword  = Just . Password . encodeUtf8
 
-newtype Login = Login { unLogin :: Text } 
 newtype HashingAlgorithm = HashingAlgorithm { hash :: ByteString -> ByteString }
 
 data User = User
