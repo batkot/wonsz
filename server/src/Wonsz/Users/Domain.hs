@@ -3,8 +3,12 @@
 {-# LANGUAGE DerivingStrategies #-}
 
 module Wonsz.Users.Domain 
-    ( User
-    , HashingAlgorythm (..)
+    ( User(..) -- hot wired in Main.hs, fix it
+    -- use optics
+    , getUserId 
+    , getUserName 
+
+    , HashingAlgorithm (..) 
     , Password
     , makePassword
     , verifyPassword
@@ -31,7 +35,7 @@ makePassword :: Text -> Maybe Password
 makePassword  = Just . Password . encodeUtf8
 
 newtype Login = Login { unLogin :: Text } 
-newtype HashingAlgorythm = HashingAlgorythm { hash :: ByteString -> ByteString }
+newtype HashingAlgorithm = HashingAlgorithm { hash :: ByteString -> ByteString }
 
 data User = User
     { _userId :: !Int
@@ -40,8 +44,14 @@ data User = User
     , _passwordHash :: !ByteString
     } deriving stock (Eq, Show)
 
-verifyPassword :: HashingAlgorythm -> User -> Password -> Maybe User
-verifyPassword (HashingAlgorythm hash) user (Password password) =
+getUserId :: User -> Int
+getUserId = _userId
+
+getUserName :: User -> Text
+getUserName = _userName
+
+verifyPassword :: HashingAlgorithm -> User -> Password -> Maybe User
+verifyPassword (HashingAlgorithm hash) user (Password password) =
     if hash  password == _passwordHash user
        then Just user
        else Nothing
@@ -54,11 +64,11 @@ canChangePassword (Named changer) (Named changee)
   | otherwise = Nothing
 
 changePassword 
-    :: HashingAlgorythm 
+    :: HashingAlgorithm 
     -> Named changer User 
     -> Named changee User 
     -> Password
     -> changer `CanChangePassword` changee
     -> User
-changePassword (HashingAlgorythm  hash) _ (Named changee) (Password newPassword) proof = 
+changePassword (HashingAlgorithm  hash) _ (Named changee) (Password newPassword) proof = 
     changee { _passwordHash = hash newPassword }

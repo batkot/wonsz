@@ -6,7 +6,7 @@ module Wonsz.Named
     , unNamed
     , pattern Named
 
-    , named
+    , name
     ) where
 
 newtype Named name a = MkNamed { unNamed :: a }
@@ -14,5 +14,5 @@ newtype Named name a = MkNamed { unNamed :: a }
 pattern Named :: a -> Named name a
 pattern Named a <- MkNamed a
 
-named :: a -> (forall name. Named name a -> r) -> r
-named x f = f . MkNamed $ x
+name :: a -> (forall name. Named name a -> r) -> r
+name x f = f . MkNamed $ x
