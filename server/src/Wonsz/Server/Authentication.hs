@@ -35,12 +35,15 @@ import Data.ByteString.Lazy.UTF8 (toString, fromString)
 import Control.Monad.Error.Class (MonadError, throwError)
 import Control.Monad.IO.Class (MonadIO, liftIO)
 
+import qualified Wonsz.Users.Domain as D
 import Wonsz.Users
 import Wonsz.Named
 
+import Data.Text as Text
+
 data AuthenticatedUser = AuthenticatedUser
     { auId :: !Int
-    , name :: !String
+    , auName :: !String
     } deriving (Show, Eq, Generic, Read)
 
 -- optics?
@@ -48,7 +51,7 @@ getAuthenticatedUserId :: AuthenticatedUser -> Int
 getAuthenticatedUserId = auId
 
 getAuthenticatedUserName :: AuthenticatedUser -> String
-getAuthenticatedUserName = name
+getAuthenticatedUserName = auName
 
 instance FromJSON AuthenticatedUser
 instance ToJSON AuthenticatedUser
@@ -91,8 +94,8 @@ authApi jwt = sessionApi tokenCreator :<|> loginHandler tokenCreator
   where
     tokenCreator = createJWT jwt
 
-bullshitCrypto :: CryptoSettings
-bullshitCrypto = CryptoSettings id
+bullshitCrypto :: D.HashingAlgorithm
+bullshitCrypto = D.HashingAlgorithm id
 
 loginHandler
     :: UserMonad m
@@ -101,7 +104,7 @@ loginHandler
     -> LoginRequest
     -> m AuthToken
 loginHandler createToken LoginRequest{..} =  do
-    user <- login bullshitCrypto username (fromString password)
+    user <- login bullshitCrypto $ LoginCommand (Text.pack username) (Text.pack password)
     token <- case user of
         Nothing -> throwError err401
         Just u -> createToken u
@@ -136,23 +139,17 @@ renewToken createToken user =
         Nothing -> throwError err401
         Just token -> return token
   where
-    userDescription = UserDescription (getAuthenticatedUserId user) (getAuthenticatedUserName user)
+    userDescription = UserDescription (getAuthenticatedUserId user) ((Text.pack . getAuthenticatedUserName) user)
 
 changePasswordHandler
     :: UserMonad m 
     => MonadError ServerError m
     => AuthenticatedUser 
     -> m ()
-changePasswordHandler user = 
-    named userId $ \namedUserId ->
-        named request $ \namedRequest -> do
-            proof <- canChangePassword namedUserId namedRequest
-            case proof of 
-                Nothing -> throwError err401
-                Just p -> saveUser $ changePassword bullshitCrypto namedUserId namedRequest p
+changePasswordHandler user = changePassword bullshitCrypto command
   where 
     userId = auId user
-    request = ChangePasswordRequest (Id userId) "newPassword"
+    command = ChangePasswordCommand userId userId "newPassword"
 
 renewTokenHandler 
     :: MonadError ServerError m
@@ -169,7 +166,7 @@ createJWT
      -> AuthTokenCreator m
 createJWT jwt UserDescription{..} = liftIO $ do
      time <- addUTCTime (3600 :: NominalDiffTime) <$> getCurrentTime
-     token <- fmap AuthToken <$> makeJWT (AuthenticatedUser userId userName) jwt (Just time)
+     token <- fmap AuthToken <$> makeJWT (AuthenticatedUser userId (Text.unpack userName)) jwt (Just time)
      case token of
          Left _ -> return Nothing
          Right t -> return $ Just t

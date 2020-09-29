@@ -20,12 +20,14 @@ import Wonsz.Server (app)
 import Wonsz.Storage (KeyValueStorage(..))
 import Data.String (fromString)
 import Data.List (find)
+import Data.Text (unpack, pack)
 
 import Control.Monad.IO.Class (MonadIO(..))
 import Control.Monad.Reader.Class (MonadReader(..))
 import Control.Monad.Reader (runReaderT)
 
-import Wonsz.Users (User(..), UserMonad(..))
+import Wonsz.Users (UserMonad(..))
+import Wonsz.Users.Domain (User(..)) -- hot wiring, should be fixed
 
 main :: IO ()
 main = 
@@ -44,7 +46,7 @@ runServer opt = do
 users :: HM.HashMap String User
 users =  HM.insert "Btk" btk HM.empty
   where
-    btk = User 1 "Btk" "password" "Tomek" "Batko"
+    btk = User 1 "Btk" "Tomek" "password"
 
 createCorsPolicy :: Maybe String -> CorsResourcePolicy 
 createCorsPolicy origin = 
@@ -53,6 +55,6 @@ createCorsPolicy origin =
     corsOrigin allowedOrigin = ([fromString allowedOrigin], True) 
 
 instance (Monad m, KeyValueStorage m String User) => UserMonad m where 
-    getUser = get 
-    saveUser user = set (_userName user) user
+    getUser = get . unpack
+    saveUser user = set ((unpack . _userLogin) user) user
     -- getById _ = get "Btk"
