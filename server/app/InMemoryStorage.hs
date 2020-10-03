@@ -34,7 +34,7 @@ runInMemoryKvsT map kvsT = do
 newtype InMemoryKvsT v m a = InMemoryKvsT { unInMemoryKvsT :: ReaderT (InMemKvs v) m a }
     deriving newtype (Functor, Applicative, Monad, MonadTrans, MonadIO)
 
-deriving instance MonadError err m => MonadError err (InMemoryKvsT v m)
+deriving newtype instance MonadError err m => MonadError err (InMemoryKvsT v m)
 
 instance (MonadIO m, Show k) => KeyValueStorage (InMemoryKvsT v m) k v where
     get key = InMemoryKvsT $ do 

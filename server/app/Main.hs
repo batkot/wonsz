@@ -69,7 +69,7 @@ newtype KvsUserMonadT m a = KvsUserMonadT { runKvsUserMonadT :: m a }
     deriving newtype (Functor, Applicative, Monad, MonadIO)
     deriving MonadTrans via IdentityT
 
-deriving instance MonadError err m => MonadError err (KvsUserMonadT m)
+deriving newtype instance MonadError err m => MonadError err (KvsUserMonadT m)
 
 instance (Monad m, KeyValueStorage m String User) => UserMonad (KvsUserMonadT m) where 
     getUser = KvsUserMonadT . get . unpack
