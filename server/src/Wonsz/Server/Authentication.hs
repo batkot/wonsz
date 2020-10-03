@@ -4,8 +4,9 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE LambdaCase #-}
-
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE DerivingStrategies #-}
 
 module Wonsz.Server.Authentication
     ( AuthenticatedUser
@@ -37,26 +38,22 @@ import Control.Monad.IO.Class (MonadIO, liftIO)
 
 import qualified Wonsz.Users.Domain as D
 import Wonsz.Users
-import Wonsz.Named
 
 import Data.Text as Text
 
 data AuthenticatedUser = AuthenticatedUser
     { auId :: !Int
-    , auName :: !String
-    } deriving (Show, Eq, Generic, Read)
+    , name :: !String
+    } 
+    deriving stock (Show, Eq, Generic, Read)
+    deriving anyclass (FromJSON, ToJSON, FromJWT, ToJWT)
 
 -- optics?
 getAuthenticatedUserId :: AuthenticatedUser -> Int
 getAuthenticatedUserId = auId
 
 getAuthenticatedUserName :: AuthenticatedUser -> String
-getAuthenticatedUserName = auName
-
-instance FromJSON AuthenticatedUser
-instance ToJSON AuthenticatedUser
-instance FromJWT AuthenticatedUser 
-instance ToJWT AuthenticatedUser
+getAuthenticatedUserName = name
 
 instance ToJSON AuthToken where
   toJSON = toJSON . toString . unAuthToken 
@@ -67,12 +64,10 @@ instance FromJSON AuthToken where
 data LoginRequest = LoginRequest
     { username :: !String
     , password :: !String
-    } deriving (Show, Eq, Generic)
+    } deriving stock (Show, Eq, Generic)
+    deriving anyclass (FromJSON, ToJSON)
 
-instance FromJSON LoginRequest
-instance ToJSON LoginRequest
-
-newtype AuthToken = AuthToken { unAuthToken :: BS.ByteString } 
+newtype AuthToken = AuthToken { unAuthToken :: BS.ByteString }
 
 rawToken :: AuthToken -> BS.ByteString
 rawToken = unAuthToken

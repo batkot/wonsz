@@ -1,5 +1,6 @@
-{-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module Wonsz.Users
     ( login
@@ -13,6 +14,7 @@ module Wonsz.Users
     ) where
 
 import Data.Text (Text)
+import Control.Monad.Trans.Class (MonadTrans(..))
 
 import Wonsz.Named (Named, name)
 import qualified Wonsz.Users.Domain as Domain 
@@ -28,6 +30,15 @@ class Monad m => UserMonad m where
     getUser :: UserName -> m (Maybe Domain.User)
     getById :: Int -> m (Maybe Domain.User)
     saveUser :: Domain.User -> m ()
+
+instance {-# OVERLAPPABLE #-}
+    ( UserMonad m 
+    , MonadTrans t 
+    , Monad (t m)
+    ) => UserMonad (t m) where 
+    getUser = lift . getUser
+    getById = lift . getById
+    saveUser = lift . saveUser
 
 data LoginCommand = LoginCommand
     { _loginUserName :: !Text

@@ -3,6 +3,11 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE DerivingStrategies #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE DerivingVia #-}
+{-# LANGUAGE StandaloneDeriving #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 
 module Main where
 
@@ -14,6 +19,7 @@ import Network.Wai.Handler.Warp (run)
 import Network.Wai.Middleware.Cors (cors, simpleCorsResourcePolicy, CorsResourcePolicy(..))
 
 import Servant.Auth.Server (generateKey)
+import Servant (ServerError)
 
 import Options (Options, getOptions, optPort, optAllowedCorsOrigin)
 import Wonsz.Server (app)
@@ -22,7 +28,10 @@ import Data.String (fromString)
 import Data.List (find)
 import Data.Text (unpack, pack)
 
+import Control.Monad.Trans.Class (MonadTrans)
+import Control.Monad.Error.Class (MonadError)
 import Control.Monad.IO.Class (MonadIO(..))
+import Control.Monad.Identity (IdentityT(..))
 import Control.Monad.Reader.Class (MonadReader(..))
 import Control.Monad.Reader (runReaderT)
 
@@ -40,11 +49,10 @@ runServer opt = do
     let policy = createCorsPolicy $ optAllowedCorsOrigin opt
     putStrLn $ "Running on port: " <> show (optPort opt)
     jwt <- generateKey
-    usrRef <- newIORef users
-    run (optPort opt) $ cors (const (Just policy)) $ app (`runReaderT` usrRef) jwt
+    run (optPort opt) $ cors (const (Just policy)) $ app (runInMemoryKvsT users . runKvsUserMonadT ) jwt
 
 users :: HM.HashMap String User
-users =  HM.insert "Btk" btk HM.empty
+users =  HM.fromList $ [btk] >>= \u ->[ (show (_userId u), u), (show (_userLogin u), u) ]
   where
     btk = User 1 "Btk" "Tomek" "password"
 
@@ -54,7 +62,13 @@ createCorsPolicy origin =
   where
     corsOrigin allowedOrigin = ([fromString allowedOrigin], True) 
 
-instance (Monad m, KeyValueStorage m String User) => UserMonad m where 
-    getUser = get . unpack
-    saveUser user = set ((unpack . _userLogin) user) user
-    -- getById _ = get "Btk"
+newtype KvsUserMonadT m a = KvsUserMonadT { runKvsUserMonadT :: m a }
+    deriving newtype (Functor, Applicative, Monad, MonadIO)
+    deriving MonadTrans via IdentityT
+
+deriving instance MonadError err m => MonadError err (KvsUserMonadT m)
+
+instance (Monad m, KeyValueStorage m String User) => UserMonad (KvsUserMonadT m) where 
+    getUser = KvsUserMonadT . get . unpack
+    saveUser user = KvsUserMonadT $ set ((unpack . _userLogin) user) user
+    getById = KvsUserMonadT . get . show 
