@@ -19,6 +19,7 @@ module Wonsz.Server.Authentication
     , AuthApi
 
     , LoginRequest(..)
+    , ChangePasswordRequest(..)
 
     , Protected
     , protected 
@@ -70,8 +71,9 @@ data LoginRequest = LoginRequest
     deriving stock (Show, Eq, Generic)
     deriving anyclass (FromJSON, ToJSON)
 
-data ChangePasswordRequest = ChangePasswordRequest
-    { newPassword :: !String
+data ChangePasswordRequest = ChangePasswordRequest 
+    { newPassword :: !String 
+    , currentPassword :: !String
     } 
     deriving stock (Show, Eq, Generic)
     deriving anyclass (FromJSON, ToJSON)
@@ -161,7 +163,7 @@ changePasswordHandler
     => AuthenticatedUser 
     -> ChangePasswordRequest
     -> m ()
-changePasswordHandler user (ChangePasswordRequest newPassword) = changePassword bullshitCrypto command
+changePasswordHandler user ChangePasswordRequest{..} = changePassword bullshitCrypto command
   where 
     userId = auId user
     command = ChangePasswordCommand userId userId (Text.pack newPassword)

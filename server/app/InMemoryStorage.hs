@@ -39,7 +39,6 @@ deriving instance MonadError err m => MonadError err (InMemoryKvsT v m)
 instance (MonadIO m, Show k) => KeyValueStorage (InMemoryKvsT v m) k v where
     get key = InMemoryKvsT $ do 
         ioRef <- ask
-        liftIO $ putStrLn $ "Looking for" <> show key
         map <- liftIO (readIORef ioRef)
         return $ HM.lookup (show key) map
 

@@ -29,7 +29,7 @@ import Servant.Auth.Server (generateKey, JWT)
 import Servant.Auth.Client
 
 import Wonsz.Server (app, Api)
-import Wonsz.Server.Authentication (AuthToken, LoginRequest(..), rawToken)
+import Wonsz.Server.Authentication (AuthToken, LoginRequest(..), ChangePasswordRequest(..), rawToken)
 import Wonsz.Server.Season (SeasonOverview(..))
 
 import Wonsz.Users (UserMonad(..))
@@ -56,6 +56,7 @@ testApi = Proxy
 data WonszClient = WonszClient
     { login :: LoginRequest -> ClientM AuthToken
     , renewToken :: Token -> ClientM AuthToken
+    , changePassword :: Token -> ChangePasswordRequest -> ClientM ()
     , getOverview :: Token -> ClientM SeasonOverview
     , env :: ClientEnv
     }
@@ -66,7 +67,7 @@ createApiClient port = do
     baseUrl <- parseBaseUrl "http://localhost"
     manager <- newManager defaultManagerSettings
     let clientEnv = mkClientEnv manager (baseUrl { baseUrlPort = port })
-    return $ WonszClient loginClient renewTokenClient overviewClient clientEnv
+    return $ WonszClient loginClient renewTokenClient changePassword overviewClient clientEnv
 
 ----
 userName :: String
@@ -84,5 +85,8 @@ validLoginRequest = LoginRequest userName goodPassword
 invalidLoginRequest :: LoginRequest 
 invalidLoginRequest = LoginRequest userName badPassword
 
-instance Monad m => UserMonad (IdentityT m) where
-  getUser userName = return . Just $ User 1 userName "" (pack goodPassword) 
+instance Monad m => UserMonad (IdentityT m) where 
+    getUser userName = return . Just $ User 1 userName "" (pack goodPassword) 
+    getById id = return . Just $ User id "" "" (pack goodPassword)
+    saveUser = const $ return ()
+
