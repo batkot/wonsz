@@ -12,7 +12,7 @@ import qualified Data.ByteString.Lazy.Char8 as BSLC
 import Test.Tasty (TestTree, testGroup, withResource)
 import Test.Tasty.HUnit (testCase, (@?=), (@?))
 import Test.Tasty.QuickCheck (testProperty, ioProperty)
-import Test.QuickCheck (Arbitrary(..), getPrintableString)
+import Test.QuickCheck (Arbitrary(..), getASCIIString)
 
 import Network.HTTP.Types.Status (status401)
 
@@ -56,4 +56,4 @@ test_tests = withWonszApp $ \client ->
 newtype BadAuthToken = BadAuthToken { getToken :: String } deriving (Show)
 
 instance Arbitrary BadAuthToken where
-  arbitrary = BadAuthToken . mconcat . lines . getPrintableString <$> arbitrary
+  arbitrary = BadAuthToken . mconcat . lines . getASCIIString <$> arbitrary

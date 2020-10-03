@@ -13,7 +13,7 @@ module Resources.WonszApp
     , invalidLoginRequest 
     ) where
 
-import Data.ByteString.Lazy.UTF8 (fromString)
+import Data.ByteString.Char8 (pack)
 
 import Test.Tasty (TestTree, testGroup, withResource)
 
@@ -32,7 +32,8 @@ import Wonsz.Server (app, Api)
 import Wonsz.Server.Authentication (AuthToken, LoginRequest(..), rawToken)
 import Wonsz.Server.Season (SeasonOverview(..))
 
-import Wonsz.Users (UserMonad(..), User(..))
+import Wonsz.Users (UserMonad(..))
+import Wonsz.Users.Domain (User(..))
 
 withWonszApp :: (IO WonszClient -> TestTree) -> TestTree
 withWonszApp tests = 
@@ -61,7 +62,7 @@ data WonszClient = WonszClient
 
 createApiClient :: Port -> IO WonszClient
 createApiClient port = do
-    let overviewClient :<|> (renewTokenClient :<|> loginClient) :<|> _ = client testApi
+    let overviewClient :<|> ((renewTokenClient :<|> changePassword) :<|> loginClient) :<|> _ = client testApi
     baseUrl <- parseBaseUrl "http://localhost"
     manager <- newManager defaultManagerSettings
     let clientEnv = mkClientEnv manager (baseUrl { baseUrlPort = port })
@@ -84,4 +85,4 @@ invalidLoginRequest :: LoginRequest
 invalidLoginRequest = LoginRequest userName badPassword
 
 instance Monad m => UserMonad (IdentityT m) where
-  getUser userName = return . Just $ User 1 userName (fromString goodPassword) "" ""
+  getUser userName = return . Just $ User 1 userName "" (pack goodPassword) 

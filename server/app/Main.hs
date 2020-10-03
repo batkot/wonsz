@@ -52,9 +52,12 @@ runServer opt = do
     run (optPort opt) $ cors (const (Just policy)) $ app (runInMemoryKvsT users . runKvsUserMonadT ) jwt
 
 users :: HM.HashMap String User
-users =  HM.fromList $ [btk] >>= \u ->[ (show (_userId u), u), (show (_userLogin u), u) ]
+users =  HM.fromList usersList
   where
-    btk = User 1 "Btk" "Tomek" "password"
+    usersList =
+        [ User 1 "Btk" "Tomek" "password"
+        , User 2 "Makkay" "Makkay" "pswd"
+        ] >>= \u -> [(show (_userId u), u), (show (_userLogin u), u)]
 
 createCorsPolicy :: Maybe String -> CorsResourcePolicy 
 createCorsPolicy origin = 
@@ -70,5 +73,7 @@ deriving instance MonadError err m => MonadError err (KvsUserMonadT m)
 
 instance (Monad m, KeyValueStorage m String User) => UserMonad (KvsUserMonadT m) where 
     getUser = KvsUserMonadT . get . unpack
-    saveUser user = KvsUserMonadT $ set ((unpack . _userLogin) user) user
+    saveUser user = KvsUserMonadT $ do 
+        set ((unpack . _userLogin) user) user
+        set ((show . _userId) user) user
     getById = KvsUserMonadT . get . show 

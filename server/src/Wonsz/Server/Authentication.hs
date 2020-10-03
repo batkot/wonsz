@@ -72,12 +72,14 @@ newtype AuthToken = AuthToken { unAuthToken :: BS.ByteString }
 rawToken :: AuthToken -> BS.ByteString
 rawToken = unAuthToken
 
-type LoginApi = "login" :> ReqBody '[JSON] LoginRequest :> Post '[JSON] AuthToken
-type SessionApi = 
-    "renewToken" :> Post '[JSON] AuthToken
-    :<|> "changePassword" :> Get '[JSON] ()
+type Protected auth = Auth auth AuthenticatedUser
 
-type AuthApi auth = (Auth auth AuthenticatedUser :> SessionApi) :<|> LoginApi
+type LoginApi = "login" :> ReqBody '[JSON] LoginRequest :> Post '[JSON] AuthToken
+type SessionApi auth = 
+    Protected auth :> "renewToken" :> Post '[JSON] AuthToken
+    :<|> Protected auth :> "changePassword" :> Get '[JSON] ()
+
+type AuthApi auth = SessionApi auth :<|> LoginApi
 
 authApi 
     :: MonadIO m
@@ -119,10 +121,8 @@ sessionApi
     :: UserMonad m 
     => MonadError ServerError m
     => AuthTokenCreator m
-    -> AuthResult AuthenticatedUser
-    -> ServerT SessionApi m
-sessionApi tokenCreator (Authenticated user) = renewToken tokenCreator user :<|> changePasswordHandler user
-sessionApi _ _ = throwError err401 :<|> throwError err401
+    -> ServerT (SessionApi auth) m
+sessionApi tokenCreator = protected (renewToken tokenCreator) :<|> protected changePasswordHandler
 
 renewToken 
     :: MonadError ServerError m
