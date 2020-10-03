@@ -20,18 +20,20 @@ module Wonsz.Server.Authentication
 
     , LoginRequest(..)
 
+    , Protected
     , protected 
     ) where
 
 import Servant (JSON, ReqBody, Get, Post, (:>), (:<|>)(..), err401, err403, ServerError, ServerT, Handler)
-import Servant.Auth.Server (FromJWT, ToJWT, JWTSettings, AuthResult(..), Auth, makeJWT)
+import Servant.Auth.Server (FromJWT, ToJWT, JWTSettings, AuthResult(..), Auth, makeJWT, ThrowAll(..))
 import Data.Aeson (FromJSON(..), ToJSON(..))
 
 import GHC.Generics (Generic)
 
 import Data.Time (NominalDiffTime, getCurrentTime, addUTCTime)
-import Data.ByteString.Lazy.Internal as BS
-import Data.ByteString.Lazy.UTF8 (toString, fromString)
+import Data.ByteString (ByteString)
+import Data.ByteString.Lazy (toStrict)
+import Data.ByteString.UTF8 (toString, fromString)
 
 import Control.Monad.Error.Class (MonadError, throwError)
 import Control.Monad.IO.Class (MonadIO, liftIO)
@@ -64,20 +66,28 @@ instance FromJSON AuthToken where
 data LoginRequest = LoginRequest
     { username :: !String
     , password :: !String
-    } deriving stock (Show, Eq, Generic)
+    } 
+    deriving stock (Show, Eq, Generic)
     deriving anyclass (FromJSON, ToJSON)
 
-newtype AuthToken = AuthToken { unAuthToken :: BS.ByteString }
+data ChangePasswordRequest = ChangePasswordRequest
+    { newPassword :: !String
+    } 
+    deriving stock (Show, Eq, Generic)
+    deriving anyclass (FromJSON, ToJSON)
 
-rawToken :: AuthToken -> BS.ByteString
+newtype AuthToken = AuthToken { unAuthToken :: ByteString }
+
+rawToken :: AuthToken -> ByteString
 rawToken = unAuthToken
 
 type Protected auth = Auth auth AuthenticatedUser
 
 type LoginApi = "login" :> ReqBody '[JSON] LoginRequest :> Post '[JSON] AuthToken
+
 type SessionApi auth = 
     Protected auth :> "renewToken" :> Post '[JSON] AuthToken
-    :<|> Protected auth :> "changePassword" :> Get '[JSON] ()
+    :<|> Protected auth :> "changePassword" :> ReqBody '[JSON] ChangePasswordRequest :> Post '[JSON] ()
 
 type AuthApi auth = SessionApi auth :<|> LoginApi
 
@@ -102,12 +112,14 @@ loginHandler
     -> m AuthToken
 loginHandler createToken LoginRequest{..} =  do
     user <- login bullshitCrypto $ LoginCommand (Text.pack username) (Text.pack password)
-    token <- case user of
+    token <- case mkAuthenticatedUser <$> user of
         Nothing -> throwError err401
         Just u -> createToken u
     case token of
         Nothing -> throwError err401
         Just t -> return t
+  where
+    mkAuthenticatedUser UserDescription{..} = AuthenticatedUser userId (Text.unpack userName)
 
 protected
     :: MonadError ServerError m
@@ -122,7 +134,7 @@ sessionApi
     => MonadError ServerError m
     => AuthTokenCreator m
     -> ServerT (SessionApi auth) m
-sessionApi tokenCreator = protected (renewToken tokenCreator) :<|> protected changePasswordHandler
+sessionApi tokenCreator = protected (renewToken tokenCreator) :<|> tmpChangePasswordHandler 
 
 renewToken 
     :: MonadError ServerError m
@@ -130,38 +142,39 @@ renewToken
     -> AuthenticatedUser 
     -> m AuthToken
 renewToken createToken user = 
-    createToken userDescription >>= \case
+    createToken user >>= \case
         Nothing -> throwError err401
         Just token -> return token
-  where
-    userDescription = UserDescription (getAuthenticatedUserId user) ((Text.pack . getAuthenticatedUserName) user)
+
+tmpChangePasswordHandler 
+    :: UserMonad m 
+    => MonadError ServerError m
+    => AuthResult AuthenticatedUser
+    -> ChangePasswordRequest
+    -> m ()
+tmpChangePasswordHandler (Authenticated user) = changePasswordHandler user 
+tmpChangePasswordHandler _ = const $ throwError err401
 
 changePasswordHandler
     :: UserMonad m 
     => MonadError ServerError m
     => AuthenticatedUser 
+    -> ChangePasswordRequest
     -> m ()
-changePasswordHandler user = changePassword bullshitCrypto command
+changePasswordHandler user (ChangePasswordRequest newPassword) = changePassword bullshitCrypto command
   where 
     userId = auId user
-    command = ChangePasswordCommand userId userId "newPassword"
+    command = ChangePasswordCommand userId userId (Text.pack newPassword)
 
-renewTokenHandler 
-    :: MonadError ServerError m
-    => AuthTokenCreator m
-    -> AuthResult AuthenticatedUser
-    -> m AuthToken
-renewTokenHandler = protected . renewToken 
-
-type AuthTokenCreator m = UserDescription -> m (Maybe AuthToken)
+type AuthTokenCreator m = AuthenticatedUser -> m (Maybe AuthToken)
 
 createJWT 
      :: MonadIO m 
      => JWTSettings 
      -> AuthTokenCreator m
-createJWT jwt UserDescription{..} = liftIO $ do
+createJWT jwt user = liftIO $ do
      time <- addUTCTime (3600 :: NominalDiffTime) <$> getCurrentTime
-     token <- fmap AuthToken <$> makeJWT (AuthenticatedUser userId (Text.unpack userName)) jwt (Just time)
+     token <- fmap (AuthToken . toStrict) <$> makeJWT user jwt (Just time)
      case token of
          Left _ -> return Nothing
          Right t -> return $ Just t

@@ -6,8 +6,7 @@ module AuthenticationSpecs
 
 import Data.Either
 
-import qualified Data.ByteString.Lazy as BSL
-import qualified Data.ByteString.Lazy.Char8 as BSLC
+import Data.ByteString.Char8 (pack)
 
 import Test.Tasty (TestTree, testGroup, withResource)
 import Test.Tasty.HUnit (testCase, (@?=), (@?))
@@ -33,22 +32,22 @@ test_tests = withWonszApp $ \client ->
                 , testCase "Given good credentials should return working token" $ do
                     c <- client
                     Right authToken <- runClientM ((login c) validLoginRequest) (env c)
-                    let token = Token . BSL.toStrict . rawToken $ authToken
+                    let token = Token . rawToken $ authToken
                     result <- runClientM (getOverview c token) (env c)
                     isRight result @? "Should get result"
 
                 , testCase "Token renewal return new working token" $ do 
                     c <- client
                     Right authToken <- runClientM ((login c) validLoginRequest) (env c)
-                    let token = Token . BSL.toStrict . rawToken $ authToken
+                    let token = Token . rawToken $ authToken
                     Right renewedToken <- runClientM (renewToken c token) (env c)
-                    let newToken = Token . BSL.toStrict . rawToken $ renewedToken
+                    let newToken = Token . rawToken $ renewedToken
                     result <- runClientM (getOverview c newToken) (env c)
                     isRight result @? "Should get result"
 
                 , testProperty "Given fake token should return 401" $ \(BadAuthToken badTokenString) -> ioProperty $ do 
                     c <- client
-                    let badToken = Token . BSL.toStrict . BSLC.pack $ badTokenString
+                    let badToken = Token . pack $ badTokenString
                     Left (FailureResponse _ (Response responseStatus _ _ _)) <- runClientM (getOverview c badToken) (env c)
                     return $ responseStatus == status401
                 ]
