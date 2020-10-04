@@ -8,10 +8,10 @@ module Login exposing
     , view
     )
 
-import Html exposing (Html, div, input, text, span, img)
-import Html.Attributes exposing (class, placeholder, type_, value, style, src)
+import Html exposing (Html, div, input, text, img)
+import Html.Attributes exposing (class, placeholder, type_, value, src)
 import Html.Events exposing (onInput, onClick)
-import Html.Extra exposing (enter, onKey, empty)
+import Html.Extra exposing (enter, onKey)
 
 import Result.Extra as RE
 

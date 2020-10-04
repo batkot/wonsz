@@ -33,9 +33,6 @@ server
     -> ServerT (Api auth) m
 server jwt = seasonApi :<|> authApi jwt :<|> serveDirectoryWebApp "static"
 
-makeProxy :: a -> Proxy a
-makeProxy = const Proxy
-
 app :: MonadIO m 
     => MonadError ServerError m
     => UserMonad m
