@@ -1,1 +1,8 @@
 *.swp
+
+*~
+.stack-work
+stack.yaml.lock
+set-hoogle.sh
+**/*.cabal
+

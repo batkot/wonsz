@@ -1,4 +1,4 @@
-name:                wonsz
+name:                wonsz-server
 version:             0.1.0.0
 github:              "batkot/wonsz"
 license:             MIT
@@ -10,7 +10,7 @@ extra-source-files:
 - README.md
 
 # Metadata used when publishing your package
-synopsis:            Simple scoreboard app
+synopsis:            Web server for simple scoreboard app
 category:            Web
 
 # To avoid duplicated efforts in documentation and dealing with the
@@ -19,6 +19,7 @@ category:            Web
 description:         Please see the README on GitHub at <https://github.com/batkot/wonsz#readme>
 
 dependencies:
+- wonsz-core
 - base >= 4.7 && < 5
 - text >= 1.2 && < 2
 - bytestring >= 0.10 && < 1.0
@@ -46,7 +47,7 @@ executables:
     - -rtsopts
     - -with-rtsopts=-N
     dependencies:
-    - wonsz
+    - wonsz-server
     - warp >= 3.2 && < 3.3
     - wai-cors >= 0.2 && < 0.3
     - optparse-applicative >= 0.14 && < 0.15
@@ -61,7 +62,7 @@ tests:
     - -rtsopts
     - -with-rtsopts=-N
     dependencies:
-    - wonsz
+    - wonsz-server
     - tasty >= 1.2 && < 2
     - tasty-discover >= 4.2 && < 5
   e2e:
@@ -72,7 +73,8 @@ tests:
     - -rtsopts
     - -with-rtsopts=-N
     dependencies:
-    - wonsz
+    - wonsz-core
+    - wonsz-server
     - servant-client >= 0.16 && < 1
     - servant-auth-client >= 0.4 && < 1
     - http-client >= 0.6 && < 1

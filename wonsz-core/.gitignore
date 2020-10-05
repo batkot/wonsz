@@ -1,5 +1,4 @@
 .stack-work/
-.db/
 wonsz.cabal
 stack.yaml.lock
 *~
