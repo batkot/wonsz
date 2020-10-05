@@ -1,0 +1,16 @@
+cradle:
+  stack:
+    - path: "./wonsz-core/src"
+      component: "wonsz-core:lib"
+    - path: "./wonsz-core/test"
+      component: "wonsz-core:test:unit"
+
+    - path: "./wonsz-server/src"
+      component: "wonsz-server:lib"
+    - path: "./wonsz-server/app"
+      component: "wonsz-server:exe:wonsz-server"
+    - path: "./wonsz-server/test/e2e"
+      component: "wonsz-server:test:e2e"
+    - path: "./wonsz-server/test/unit"
+      component: "wonsz-server:test:unit"
+
