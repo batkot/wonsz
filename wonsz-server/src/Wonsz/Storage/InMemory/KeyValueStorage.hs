@@ -6,7 +6,7 @@
 {-# LANGUAGE DerivingStrategies #-}
 {-# LANGUAGE StandaloneDeriving #-}
 
-module InMemoryStorage 
+module Wonsz.Storage.InMemory.KeyValueStorage
     ( runInMemoryKvsT
     ) where
 

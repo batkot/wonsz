@@ -25,7 +25,7 @@ dependencies:
 - bytestring >= 0.10 && < 1.0
 - transformers >= 0.5 && < 0.6
 - microlens-platform >= 0.3 && < 1
-# Servant Api dependencies
+- unordered-containers >= 0.2 && < 0.3
 - servant-server >= 0.16 && < 0.17
 - servant-auth >= 0.3 && < 0.4
 - servant-auth-server >= 0.4 && < 0.5
@@ -34,6 +34,10 @@ dependencies:
 - aeson >= 1.4 && < 1.6
 - mtl >= 2.2 && < 3.0
 - time >= 1.8 && < 2.0
+- persistent >= 2.9 && < 3
+- persistent-postgresql >= 2.9 && < 3
+- persistent-template > 2.6 && < 3
+- monad-logger >= 0.3 && < 1
 
 library:
   source-dirs: src
@@ -51,7 +55,6 @@ executables:
     - warp >= 3.2 && < 3.3
     - wai-cors >= 0.2 && < 0.3
     - optparse-applicative >= 0.14 && < 0.15
-    - unordered-containers >= 0.2 && < 0.3
 
 tests:
   unit:
