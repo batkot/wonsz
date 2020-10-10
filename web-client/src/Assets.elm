@@ -3,7 +3,7 @@ module Assets exposing (logo, makkay, btk, hub, szuro, kuba, mateusz)
 import WebpackAsset as WA
 
 logo : String
-logo = WA.assetUrl "./static/images/logo-tmp.png"
+logo = WA.assetUrl "./static/images/logo.png"
 
 makkay : String
 makkay = WA.assetUrl "./static/images/makkay.jpg"
