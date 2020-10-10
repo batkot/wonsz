@@ -1,3 +1,4 @@
+{-# LANGUAGE DerivingStrategies #-}
 {-# LANGUAGE EmptyDataDecls             #-}
 {-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE GADTs                      #-}
@@ -7,7 +8,6 @@
 {-# LANGUAGE QuasiQuotes                #-}
 {-# LANGUAGE TemplateHaskell            #-}
 {-# LANGUAGE TypeFamilies               #-}
-{-# LANGUAGE DerivingStrategies #-}
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE DeriveGeneric #-}
@@ -15,9 +15,9 @@
 
 module Wonsz.Storage.Postgres.Database
     ( initialize
-    , PersistentBackendT(..)
 
-    , runPostgresBackendT
+    , PersistentSqlBackEndT (..)
+    , runPostgresBackEndT
     ) where
 
 import Data.ByteString (ByteString)
@@ -31,17 +31,17 @@ import Wonsz.Users (UserMonad(..))
 
 import Control.Monad (void)
 import Control.Monad.Trans.Class (MonadTrans(..))
-import Control.Monad.Reader.Class (MonadReader(..))
+import Control.Monad.Reader (ReaderT(..), ask)
 import Control.Monad.Error.Class (MonadError)
+import Control.Monad.Identity (IdentityT(..))
 import           Control.Monad.IO.Class  (liftIO, MonadIO(..))
-import           Control.Monad.Logger    (runStderrLoggingT, MonadLogger, NoLoggingT(..))
+import           Control.Monad.Logger    (MonadLogger, NoLoggingT(..))
 import qualified Database.Persist               as Persist
 import qualified Database.Persist.Sql           as PS
 import qualified Database.Persist.Postgresql    as P
 import qualified Database.Persist.Postgresql.JSON as PJSON
-import Database.Esqueleto as E (from, where_, (^.), (==.), (=.), select, val, update, set, count) 
+import Database.Esqueleto as E (from, where_, (^.), (==.), (=.), select, val, update, set, countRows, count, countDistinct, SqlExpr, Value) 
 import qualified Database.Persist.TH            as PTH
-import Servant (ServerError)
 
 PTH.share [PTH.mkPersist PTH.sqlSettings, PTH.mkMigrate "migrateAll"] [PTH.persistLowerCase|
     Account
@@ -60,39 +60,31 @@ seedUsers = do
     users <- select $ 
                 from $ \account -> do
                     where_ $ account ^. AccountLogin ==. val "btk"
-                    return $ account ^. AccountUserId
+                    return (countRows :: SqlExpr (Value Int))
     if not (null users)
        then return ()
        else void $ P.insert $ Account 1 "btk" "Tomek" "password" 
 
+newtype PersistentSqlBackEndT m a = PersistentSqlBackEndT 
+    { unPersistentSqlBackEndT :: ReaderT P.ConnectionPool m a } 
+    deriving newtype (Functor, Applicative, Monad, MonadIO, MonadTrans)
 
-newtype PersistentBackendT m a = PersistentBackendT 
-    { unPersistentBackendT :: P.SqlPersistT m a } 
-    deriving newtype (Functor, Applicative, Monad, MonadTrans, MonadIO)
+deriving newtype instance MonadError err m => MonadError err (PersistentSqlBackEndT m)
 
-deriving newtype instance MonadError err m => MonadError err (PersistentBackendT m)
+runSql 
+    :: Monad m 
+    => MonadIO m 
+    => P.SqlPersistT IO a -> PersistentSqlBackEndT m a
+runSql sql = PersistentSqlBackEndT $ do 
+    pool <- ask 
+    liftIO $ P.runSqlPool sql pool
 
-runPostgresBackendT
-    :: MonadLogger m 
-    => MonadUnliftIO m
-    => P.ConnectionString 
-    -> PersistentBackendT m a
-    -> m a
-runPostgresBackendT connectionString (PersistentBackendT persistT) = 
-    P.withPostgresqlPool connectionString 10 $ \pool -> do 
-        flip P.runSqlPool pool $ do
-            initialize
-            persistT 
+runPostgresBackEndT :: P.ConnectionPool -> PersistentSqlBackEndT m a -> m a
+runPostgresBackEndT pool = flip runReaderT pool . unPersistentSqlBackEndT 
 
-runPostgresBackendTIO 
-    :: P.ConnectionString 
-    -> PersistentBackendT (NoLoggingT IO) a
-    -> IO a
-runPostgresBackendTIO conn = runNoLoggingT . runPostgresBackendT conn
-
-instance (Monad m, MonadIO m) => UserMonad (PersistentBackendT m) where
-    getUser userName = PersistentBackendT $ do
-        matchingUser <- listToMaybe <$> findAccounts userName
+instance (Monad m, MonadIO m) => UserMonad (PersistentSqlBackEndT m) where
+    getUser userName = do 
+        matchingUser <- listToMaybe <$> runSql (findAccounts userName)
         return $ mapToUser <$> matchingUser
       where
         mapToUser = User
@@ -101,12 +93,12 @@ instance (Monad m, MonadIO m) => UserMonad (PersistentBackendT m) where
             <*> accountName . P.entityVal
             <*> accountPassword . P.entityVal
 
-    saveUser (User uId _ uName uPassword) = PersistentBackendT $ 
-        update $ \account -> do
-            set account [ AccountName =. val uName, AccountPassword =. val uPassword]
-            where_ $ account ^. AccountUserId ==. val uId
+    saveUser (User uId _ uName uPassword) = runSql $
+            update $ \account -> do
+                set account [ AccountName =. val uName, AccountPassword =. val uPassword]
+                where_ $ account ^. AccountUserId ==. val uId
 
-    getById userId = PersistentBackendT $ do
+    getById userId = runSql $ do
         matchingUser <- listToMaybe <$> findAccountById userId
         return $ mapToUser <$> matchingUser
       where

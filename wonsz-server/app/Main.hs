@@ -11,7 +11,7 @@ import Control.Monad.Logger (runStderrLoggingT, LoggingT)
 import Wonsz.Storage.InMemory.KeyValueStorage
 import Wonsz.Storage.InMemory.Repositories
 
-import Wonsz.Storage.Postgres.Database (runPostgresBackendT, PersistentBackendT)
+import Wonsz.Storage.Postgres.Database (initialize, runPostgresBackEndT)
 
 import Network.Wai.Handler.Warp (run)
 import Network.Wai.Middleware.Cors (cors, simpleCorsResourcePolicy, CorsResourcePolicy(..))
@@ -51,17 +51,19 @@ runServer opt = do
     let policy = createCorsPolicy $ optAllowedCorsOrigin opt
     putStrLn $ "Running on port: " <> show (optPort opt)
     jwt <- generateKey
-    run (optPort opt) $ cors (const (Just policy)) $ app inMemoryStack jwt
+    pool <- runStderrLoggingT $ createPostgresqlPool connString 10
+    runSqlPool initialize pool
+    run (optPort opt) $ cors (const (Just policy)) $ app (runPostgresBackEndT pool) jwt
 
-inMemoryStack =
-    runInMemoryKvsT users . runKvsUserMonadT 
-  where
-    users =  HM.fromList usersList
-      where
-        usersList =
-            [ User 1 "Btk" "Tomek" "password"
-            , User 2 "Makkay" "Makkay" "pswd"
-            ] >>= \u -> [(show (_userId u), u), (show (_userLogin u), u)]
+-- inMemoryStack =
+--     runInMemoryKvsT users . runKvsUserMonadT 
+--   where
+--     users =  HM.fromList usersList
+--       where
+--         usersList =
+--             [ User 1 "Btk" "Tomek" "password"
+--             , User 2 "Makkay" "Makkay" "pswd"
+--             ] >>= \u -> [(show (_userId u), u), (show (_userLogin u), u)]
 
 createCorsPolicy :: Maybe String -> CorsResourcePolicy 
 createCorsPolicy origin = 
