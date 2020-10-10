@@ -1,7 +1,5 @@
 module Auth exposing
-    ( AuthCommand
-
-    , AuthSession
+    ( AuthSession
     , user
 
     , UserDescription
@@ -27,11 +25,6 @@ import Json.Decode as JD
 import Json.Decode.Pipeline as JDP
 import Jwt
 import Result
-
-type AuthCommand 
-    = ValidateToken TokenString
-    | RenewToken AuthSession
-    | Logout AuthSession
 
 type AuthToken = AuthToken String
 
