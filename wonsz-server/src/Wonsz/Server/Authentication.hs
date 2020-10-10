@@ -19,13 +19,12 @@ module Wonsz.Server.Authentication
     , AuthApi
 
     , LoginRequest(..)
-    , ChangePasswordRequest(..)
 
     , Protected
     , protected 
     ) where
 
-import Servant (JSON, ReqBody, Get, Post, (:>), (:<|>)(..), err401, err403, ServerError, ServerT, Handler)
+import Servant (JSON, ReqBody, Capture, Get, Post, (:>), (:<|>)(..), err401, err403, ServerError, ServerT, Handler)
 import Servant.Auth.Server (FromJWT, ToJWT, JWTSettings, AuthResult(..), Auth, makeJWT, ThrowAll(..))
 import Data.Aeson (FromJSON(..), ToJSON(..))
 
@@ -41,6 +40,7 @@ import Control.Monad.IO.Class (MonadIO, liftIO)
 
 import qualified Wonsz.Users.Domain as D
 import Wonsz.Users
+import Wonsz.Crypto (CryptoMonad)
 
 import Data.Text as Text
 
@@ -71,13 +71,6 @@ data LoginRequest = LoginRequest
     deriving stock (Show, Eq, Generic)
     deriving anyclass (FromJSON, ToJSON)
 
-data ChangePasswordRequest = ChangePasswordRequest 
-    { newPassword :: !String 
-    , currentPassword :: !String
-    } 
-    deriving stock (Show, Eq, Generic)
-    deriving anyclass (FromJSON, ToJSON)
-
 newtype AuthToken = AuthToken { unAuthToken :: ByteString }
 
 rawToken :: AuthToken -> ByteString
@@ -87,15 +80,14 @@ type Protected auth = Auth auth AuthenticatedUser
 
 type LoginApi = "login" :> ReqBody '[JSON] LoginRequest :> Post '[JSON] AuthToken
 
-type SessionApi auth = 
-    Protected auth :> "renewToken" :> Post '[JSON] AuthToken
-    :<|> Protected auth :> "changePassword" :> ReqBody '[JSON] ChangePasswordRequest :> Post '[JSON] ()
+type SessionApi auth = Protected auth :> "renewToken" :> Post '[JSON] AuthToken
 
 type AuthApi auth = SessionApi auth :<|> LoginApi
 
 authApi 
     :: MonadIO m
     => UserMonad m
+    => CryptoMonad m
     => MonadError ServerError m
     => JWTSettings 
     -> ServerT (AuthApi auth) m
@@ -103,17 +95,15 @@ authApi jwt = sessionApi tokenCreator :<|> loginHandler tokenCreator
   where
     tokenCreator = createJWT jwt
 
-bullshitCrypto :: D.HashingAlgorithm
-bullshitCrypto = D.HashingAlgorithm id
-
 loginHandler
     :: UserMonad m
+    => CryptoMonad m
     => MonadError ServerError m
     => AuthTokenCreator m
     -> LoginRequest
     -> m AuthToken
 loginHandler createToken LoginRequest{..} =  do
-    user <- login bullshitCrypto $ LoginCommand (Text.pack username) (Text.pack password)
+    user <- login $ LoginCommand (Text.pack username) (Text.pack password)
     token <- case mkAuthenticatedUser <$> user of
         Nothing -> throwError err401
         Just u -> createToken u
@@ -136,7 +126,7 @@ sessionApi
     => MonadError ServerError m
     => AuthTokenCreator m
     -> ServerT (SessionApi auth) m
-sessionApi tokenCreator = protected (renewToken tokenCreator) :<|> tmpChangePasswordHandler 
+sessionApi tokenCreator = protected (renewToken tokenCreator) 
 
 renewToken 
     :: MonadError ServerError m
@@ -147,26 +137,6 @@ renewToken createToken user =
     createToken user >>= \case
         Nothing -> throwError err401
         Just token -> return token
-
-tmpChangePasswordHandler 
-    :: UserMonad m 
-    => MonadError ServerError m
-    => AuthResult AuthenticatedUser
-    -> ChangePasswordRequest
-    -> m ()
-tmpChangePasswordHandler (Authenticated user) = changePasswordHandler user 
-tmpChangePasswordHandler _ = const $ throwError err401
-
-changePasswordHandler
-    :: UserMonad m 
-    => MonadError ServerError m
-    => AuthenticatedUser 
-    -> ChangePasswordRequest
-    -> m ()
-changePasswordHandler user ChangePasswordRequest{..} = changePassword bullshitCrypto command
-  where 
-    userId = auId user
-    command = ChangePasswordCommand userId userId (Text.pack newPassword)
 
 type AuthTokenCreator m = AuthenticatedUser -> m (Maybe AuthToken)
 

@@ -1,9 +1,15 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE StandaloneDeriving #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE DerivingStrategies #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module Main where
 
-import Control.Monad.Logger (runStderrLoggingT, LoggingT)
+import Control.Monad.Logger (runStderrLoggingT)
 
 import Wonsz.Storage.Postgres.Database (initializePostgresqlPool, runPostgresBackEndT)
 
@@ -16,6 +22,9 @@ import Options (Options, getOptions, optPort, optAllowedCorsOrigin)
 import Wonsz.Server (app)
 import Data.ByteString (ByteString)
 import Data.String (fromString)
+import Control.Monad.Error.Class (MonadError)
+
+import Wonsz.Crypto (runPlainTextCryptoT, PlainTextCryptoT(..))
 
 main :: IO ()
 main = 
@@ -32,7 +41,7 @@ runServer opt = do
     putStrLn $ "Running on port: " <> show (optPort opt)
     jwt <- generateKey
     pool <- runStderrLoggingT $ initializePostgresqlPool connString 2
-    run (optPort opt) $ cors (const (Just policy)) $ app (runPostgresBackEndT pool) jwt
+    run (optPort opt) $ cors (const (Just policy)) $ app (runPlainTextCryptoT . runPostgresBackEndT pool) jwt
 
 -- inMemoryStack =
 --     runInMemoryKvsT users . runKvsUserMonadT 
@@ -49,3 +58,5 @@ createCorsPolicy origin =
     simpleCorsResourcePolicy { corsRequestHeaders = [ "authorization", "content-type" ], corsOrigins = corsOrigin <$> origin }
   where
     corsOrigin allowedOrigin = ([fromString allowedOrigin], True) 
+
+deriving newtype instance MonadError err m => MonadError err (PlainTextCryptoT m)

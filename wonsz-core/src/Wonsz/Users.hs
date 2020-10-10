@@ -13,10 +13,12 @@ module Wonsz.Users
     , UserMonad(..)
     ) where
 
+import Data.Maybe (fromMaybe)
 import Data.Text (Text)
 import Control.Monad.Trans.Class (MonadTrans(..))
 
 import Wonsz.Named (Named, name)
+import Wonsz.Crypto (CryptoMonad(..))
 import qualified Wonsz.Users.Domain as Domain 
 
 data UserDescription = UserDescription
@@ -47,16 +49,18 @@ data LoginCommand = LoginCommand
 
 login 
     :: UserMonad m 
-    => Domain.HashingAlgorithm
-    -> LoginCommand
+    => CryptoMonad m
+    => LoginCommand
     -> m (Maybe UserDescription)
-login hash LoginCommand{..} = do
+login LoginCommand{..} = do
     user <- getUser _loginUserName
-    return $ do 
-        u <- user
-        p <- Domain.makePassword _loginPassword
-        verified <- Domain.verifyPassword hash u p
-        return $ UserDescription (Domain.getUserId verified) (Domain.getUserName verified)
+    verified <- fromMaybe (return Nothing) $ Domain.verifyPassword <$> user <*> Domain.makePassword _loginPassword -- Maybe (m (Maybe User)) -> m (Maybe User)
+    return $ UserDescription <$> (Domain.getUserId <$> verified) <*> (Domain.getUserName <$> verified)
+
+-- Maybe a 
+-- Maybe b
+-- f: a -> b -> m (Maybe c)
+-- f <$> a <*> b -> Maybe (m Maybe c)
 
 data ChangePasswordCommand = ChangePasswordCommand
     { _changeeUserId :: !Int
@@ -66,10 +70,10 @@ data ChangePasswordCommand = ChangePasswordCommand
 
 changePassword 
     :: UserMonad m
-    => Domain.HashingAlgorithm
-    -> ChangePasswordCommand
+    => CryptoMonad m
+    => ChangePasswordCommand
     -> m ()
-changePassword hash ChangePasswordCommand{..}= do
+changePassword ChangePasswordCommand{..} = do
     maybeChanger <- getById _changerUserId
     maybeChangee <- getById _changeeUserId 
 
@@ -80,6 +84,6 @@ changePassword hash ChangePasswordCommand{..}= do
                     case (Domain.canChangePassword namedChanger namedChangee, Domain.makePassword _newPassword) of
                         (Nothing, _) -> return ()
                         (_, Nothing) -> return ()
-                        (Just proof, Just newPassword) -> saveUser $ Domain.changePassword hash namedChanger namedChangee newPassword proof 
+                        (Just proof, Just newPassword) -> Domain.changePassword namedChanger namedChangee newPassword proof >>= saveUser
 
         (_, _) -> return ()

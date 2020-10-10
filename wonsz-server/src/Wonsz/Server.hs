@@ -19,6 +19,7 @@ import Control.Monad.IO.Class (MonadIO)
 import Control.Monad.Error.Class (MonadError)
 
 import Wonsz.Users (UserMonad)
+import Wonsz.Crypto (CryptoMonad)
 
 type Api auth = 
     "api" :> SeasonApi auth 
@@ -29,6 +30,7 @@ server
     :: MonadIO m 
     => MonadError ServerError m
     => UserMonad m
+    => CryptoMonad m
     => JWTSettings 
     -> ServerT (Api auth) m
 server jwt = seasonApi :<|> authApi jwt :<|> serveDirectoryWebApp "static"
@@ -36,6 +38,7 @@ server jwt = seasonApi :<|> authApi jwt :<|> serveDirectoryWebApp "static"
 app :: MonadIO m 
     => MonadError ServerError m
     => UserMonad m
+    => CryptoMonad m
     => (forall x. m x -> Handler x)
     -> JWK 
     -> Application

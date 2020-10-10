@@ -8,7 +8,6 @@ module Wonsz.Users.Domain
     , getUserId 
     , getUserName 
 
-    , HashingAlgorithm (..) 
     , Password
     , makePassword
     , verifyPassword
@@ -23,6 +22,8 @@ import Data.Text.Encoding (encodeUtf8)
 import Data.ByteString (ByteString)
 
 import Wonsz.Named (Named, pattern Named)
+import Wonsz.Crypto (CryptoMonad(..))
+
 
 -- User domain representation
 -- actions: 
@@ -33,8 +34,6 @@ newtype Password = Password { unPassword :: ByteString }
 
 makePassword :: Text -> Maybe Password
 makePassword  = Just . Password . encodeUtf8
-
-newtype HashingAlgorithm = HashingAlgorithm { hash :: ByteString -> ByteString }
 
 data User = User
     { _userId :: !Int
@@ -49,11 +48,16 @@ getUserId = _userId
 getUserName :: User -> Text
 getUserName = _userName
 
-verifyPassword :: HashingAlgorithm -> User -> Password -> Maybe User
-verifyPassword (HashingAlgorithm hash) user (Password password) =
-    if hash  password == _passwordHash user
-       then Just user
-       else Nothing
+verifyPassword 
+    :: CryptoMonad m
+    => User 
+    -> Password 
+    -> m (Maybe User)
+verifyPassword user (Password password) = do
+    pswd <- hash password
+    if pswd == _passwordHash user
+       then return $ Just user
+       else return Nothing
 
 newtype CanChangePassword changer changee = CanChangePassword User
 
@@ -63,11 +67,12 @@ canChangePassword (Named changer) (Named changee)
   | otherwise = Nothing
 
 changePassword 
-    :: HashingAlgorithm 
-    -> Named changer User 
+    :: CryptoMonad m
+    => Named changer User 
     -> Named changee User 
     -> Password
     -> changer `CanChangePassword` changee
-    -> User
-changePassword (HashingAlgorithm  hash) _ (Named changee) (Password newPassword) proof = 
-    changee { _passwordHash = hash newPassword }
+    -> m User
+changePassword _ (Named changee) (Password newPassword) proof = do
+    newPswd <- hash newPassword
+    return $ changee { _passwordHash = newPswd }
