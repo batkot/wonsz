@@ -15,6 +15,7 @@
 
 module Wonsz.Storage.Postgres.Database
     ( initialize
+    , initializePostgresqlPool 
 
     , PersistentSqlBackEndT (..)
     , runPostgresBackEndT
@@ -51,6 +52,17 @@ PTH.share [PTH.mkPersist PTH.sqlSettings, PTH.mkMigrate "migrateAll"] [PTH.persi
         password ByteString
         deriving Show
 |]
+
+initializePostgresqlPool 
+    :: MonadUnliftIO m
+    => MonadLogger m
+    => P.ConnectionString
+    -> Int 
+    -> m P.ConnectionPool
+initializePostgresqlPool connString poolSize = do
+    pool <- P.createPostgresqlPool connString poolSize
+    P.runSqlPool initialize pool
+    return pool
 
 initialize :: MonadIO m => P.SqlPersistT m ()
 initialize = P.runMigration migrateAll >> seedUsers
