@@ -37,6 +37,8 @@ dependencies:
 - persistent >= 2.9 && < 3
 - persistent-postgresql >= 2.9 && < 3
 - persistent-template > 2.6 && < 3
+- esqueleto > 3.0 && < 4
+- unliftio-core > 0.1 && < 1
 - monad-logger >= 0.3 && < 1
 
 library:

@@ -6,17 +6,24 @@ module Main where
 import Data.HashMap.Strict as HM
 import Data.IORef
 
+import Control.Monad.Logger (runStderrLoggingT, LoggingT)
+
 import Wonsz.Storage.InMemory.KeyValueStorage
 import Wonsz.Storage.InMemory.Repositories
 
+import Wonsz.Storage.Postgres.Database (runPostgresBackendT, PersistentBackendT)
+
 import Network.Wai.Handler.Warp (run)
 import Network.Wai.Middleware.Cors (cors, simpleCorsResourcePolicy, CorsResourcePolicy(..))
+
+import Database.Persist.Postgresql 
 
 import Servant.Auth.Server (generateKey)
 import Servant (ServerError)
 
 import Options (Options, getOptions, optPort, optAllowedCorsOrigin)
 import Wonsz.Server (app)
+import Data.ByteString (ByteString)
 import Data.String (fromString)
 import Data.List (find)
 import Data.Text (unpack, pack)
@@ -36,20 +43,25 @@ main =
         Left err -> putStrLn err
         Right opt -> runServer opt
 
+connString :: ByteString
+connString = "postgres://wonsz-web:dupa@localhost:5432/persistent-test"
+
 runServer :: Options -> IO ()
 runServer opt = do
     let policy = createCorsPolicy $ optAllowedCorsOrigin opt
     putStrLn $ "Running on port: " <> show (optPort opt)
     jwt <- generateKey
-    run (optPort opt) $ cors (const (Just policy)) $ app (runInMemoryKvsT users . runKvsUserMonadT ) jwt
+    run (optPort opt) $ cors (const (Just policy)) $ app inMemoryStack jwt
 
-users :: HM.HashMap String User
-users =  HM.fromList usersList
+inMemoryStack =
+    runInMemoryKvsT users . runKvsUserMonadT 
   where
-    usersList =
-        [ User 1 "Btk" "Tomek" "password"
-        , User 2 "Makkay" "Makkay" "pswd"
-        ] >>= \u -> [(show (_userId u), u), (show (_userLogin u), u)]
+    users =  HM.fromList usersList
+      where
+        usersList =
+            [ User 1 "Btk" "Tomek" "password"
+            , User 2 "Makkay" "Makkay" "pswd"
+            ] >>= \u -> [(show (_userId u), u), (show (_userLogin u), u)]
 
 createCorsPolicy :: Maybe String -> CorsResourcePolicy 
 createCorsPolicy origin = 
