@@ -1,99 +1,53 @@
 module Effect exposing
-    (..)
+    ( Fx
+    , map
+    , pure
+    , op
+    , bind
+    , pipe
 
-import Http
-import Http.Extra as HE
+    , addFx
+    , mapFx
+    , just
+    , push
 
-import Cmd.Extra as CE
-import Delay as D
+    , runFx
+    )
 
-import IO.LocalStorage as LS
+-- Writer
+type Fx eff a = Fx (List eff) a
 
-    
-interpret : Cmd msg -> (eff -> Cmd msg) -> Eff eff a -> (a, Cmd msg)
-interpret return runFx fx = 
-    case fx of
-        Pure x -> (x, return)
-        Effect (eff, next) -> 
-            let (x, nextCmd) = interpret return runFx next
-                cmd = runFx eff
-            in (x, Cmd.batch [cmd, nextCmd])
+map : (a -> b) -> Fx eff a -> Fx eff b
+map f (Fx fx x) = Fx fx <| f x
 
-type CommandFx msg 
-    = Raise msg
-    | Delay msg Float
+pure : x -> Fx eff x
+pure = Fx [] 
 
-type HttpFx a msg
-    = Request (HE.HttpRequest a) (Result Http.Error a -> msg)
+op : Fx eff (a -> b) -> Fx eff a -> Fx eff b
+op (Fx fx1 f) (Fx fx2 x) = Fx (fx1 ++ fx2) <| f x
 
-type LocalStorageFx 
-    = Store String String 
-    | Clear String
+bind : Fx eff a -> (a -> Fx eff b) -> Fx eff b
+bind (Fx fx1 a) f = 
+    let (Fx fx2 b) = f a
+    in Fx (fx1 ++ fx2) b
 
-runLocalStorageFx : LocalStorageFx -> Cmd msg
-runLocalStorageFx eff =
-    case eff of
-        Store key value -> LS.storeString key value
-        Clear key -> LS.clearKey key
+pipe : Fx eff a -> Fx eff b -> Fx eff b
+pipe a b = bind a <| always b
 
-runHttpFx : HE.Url -> HttpFx a msg -> Cmd msg
-runHttpFx baseUrl eff = 
-    case eff of
-        Request request f -> 
-            HE.execute baseUrl request
-            |> Cmd.map f
+runFx : (eff -> Cmd msg) -> Fx eff a -> (a, Cmd msg)
+runFx run (Fx effects value) =
+    let cmds = List.map run effects
+    in (value, Cmd.batch cmds)
 
-runCommandFx : CommandFx msg -> Cmd msg
-runCommandFx eff = 
-    case eff of 
-        Raise msg -> CE.pure msg
-        Delay msg minutes -> D.after minutes D.Minute msg
+addFx : eff -> a -> Fx eff a
+addFx fx a = pure a
+    |> push fx 
 
-type Comp a b 
-    = A a 
-    | B b
+just : eff -> Fx eff ()
+just fx = Fx [fx] ()
 
-runCompFx : (a -> Cmd msg) -> (b -> Cmd msg) -> Comp a b -> Cmd msg
-runCompFx fa fb comp =
-    case comp of
-        A a -> fa a
-        B b -> fb b
+push : eff -> Fx eff a -> Fx eff a
+push fx (Fx x a) = Fx (x ++ [fx]) a
 
-type Eff eff a 
-    = Pure a
-    | Effect (eff, Eff eff a)
-
-combine : Eff eff1 a -> Eff eff2 a -> Eff (Comp eff1 eff2) a
-combine first second = 
-    let a = mapFx A first
-        b = mapFx B second
-    in bind a (always b)
-
-bind : Eff fx a -> (a -> Eff fx b) -> Eff fx b
-bind fx f =
-    case fx of
-        Pure a -> f a
-        Effect (eff, i) -> Effect (eff, bind i f)
-
-pure : a -> Eff eff a
-pure = Pure
-
-addFx: eff -> Eff eff a -> Eff eff a
-addFx new fx = Effect (new, fx)
-
-mapFx : (eff -> eff2) -> Eff eff a -> Eff eff2 a
-mapFx f eff =
-    case eff of
-        Pure x -> Pure x
-        Effect (fx, i) -> Effect (f fx, mapFx f i)
-
-fMap : (a -> b) -> Eff eff a -> Eff eff b
-fMap f eff = 
-    case eff of
-        Pure x -> Pure (f x)
-        Effect (fx, i) -> Effect (fx, fMap f i)
-
-store : String -> String -> Eff LocalStorageFx ()
-store key value = 
-    pure ()
-    |> addFx (Store key value)
+mapFx : (a -> b) -> Fx a x -> Fx b x
+mapFx f (Fx fx x) = Fx (List.map f fx) x

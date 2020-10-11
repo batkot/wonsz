@@ -3,7 +3,7 @@ module Scoreboard exposing
     , initCommand
     , Model
     , initModel
-    , update 
+    -- , update 
     , view
     )
 
@@ -22,7 +22,7 @@ import IO.Api exposing (getSeasonOverview, SeasonOverview, SeasonParticipant)
 
 import Effect as Fx
 
-type alias ScoreboardFx = Fx.HttpFx SeasonOverview Command
+-- type alias ScoreboardFx = Fx.HttpFx SeasonOverview Command
 
 type Command
     = Init
@@ -37,19 +37,19 @@ type alias Model = SeasonOverview
 initModel : SeasonOverview
 initModel = SeasonOverview []
 
-update : AuthSession -> Command -> Model -> Fx.Eff ScoreboardFx Model
-update auth cmd m = 
-    case cmd of
-        Init -> 
-            let httpFx = Fx.Request (getSeasonOverview auth) (RE.unpack (always SeasonOverviewFailure) GotSeasonOverview)
-            in Fx.pure m
-                |> Fx.addFx httpFx
+-- update : AuthSession -> Command -> Model -> Fx.Eff ScoreboardFx Model
+-- update auth cmd m = 
+--     case cmd of
+--         Init -> 
+--             let httpFx = Fx.Request (getSeasonOverview auth) (RE.unpack (always SeasonOverviewFailure) GotSeasonOverview)
+--             in Fx.pure m
+--                 |> Fx.addFx httpFx
 
-        GotSeasonOverview overview ->
-            Fx.pure overview
+--         GotSeasonOverview overview ->
+--             Fx.pure overview
 
-        SeasonOverviewFailure ->
-            Fx.pure m
+--         SeasonOverviewFailure ->
+--             Fx.pure m
 
 view : HasBaseUrl (HasDict x) -> Model -> Html a
 view { baseUrl, dict} season = 
