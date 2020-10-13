@@ -31,6 +31,7 @@ import Router.Routes exposing (Route(..))
 
 import Login as L 
 import Page.Account as A
+import Page.NotFound as NF
 
 type alias Page pageModel = 
     { title : String 
@@ -164,8 +165,7 @@ view hasDict model =
             |> pageView accountPage.title
 
         (NotFound notFoundPage) ->
-            Html.text "Not found"
-            |> pageView notFoundPage.title
+            pageView notFoundPage.title NF.view
 
 pageView : String -> Html a -> PageView a
 pageView title html = 
