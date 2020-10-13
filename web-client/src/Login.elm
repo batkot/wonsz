@@ -5,6 +5,8 @@ module Login exposing
     , emptyModel
     , update
     , view
+
+    , redirectRoute
     )
 
 import Html exposing (Html, div, input, text, img)
@@ -40,16 +42,19 @@ type LoginCmd
 type alias LoginData =
     { user : String
     , password : String
-    , redirectToRoute : Maybe Route
+    , redirectToRoute : Route
     , error : Maybe LoginError
     }
+
+redirectRoute : LoginData -> Route
+redirectRoute { redirectToRoute } = redirectToRoute
 
 type LoginError 
     = ConnectionError
     | BadCredentials
     | Other String
 
-emptyModel : Maybe Route -> LoginData
+emptyModel : Route -> LoginData
 emptyModel redirectToRoute = LoginData "" "" redirectToRoute Nothing
 
 update : LoginCmd -> LoginData -> Fx LoginFx LoginData
