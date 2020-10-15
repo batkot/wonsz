@@ -5,6 +5,9 @@ module IO.Api exposing
     , getSeasonOverview
     , SeasonOverview
     , SeasonParticipant
+
+    , getAccountDetails
+    , AccountDetails
     )
 
 import Http exposing (jsonBody, emptyBody)
@@ -28,6 +31,11 @@ login username password =
             , ("password", JE.string password)]
             |> jsonBody
     in makeRequest (Url "/auth/login") Post JD.string loginBody
+
+renewToken : Authorized AuthTokenString
+renewToken = 
+    makeRequest (Url "/auth/renewToken") Post JD.string emptyBody
+    |> authorize
 
 type alias SeasonOverview =
     { participants : List SeasonParticipant
@@ -58,7 +66,22 @@ getSeasonOverview =
     makeRequest (Url "/api/overview") Get seasonOverviewDecoder emptyBody
     |> authorize
 
-renewToken : Authorized AuthTokenString
-renewToken = 
-    makeRequest (Url "/auth/renewToken") Post JD.string emptyBody
-    |> authorize
+type alias AccountDetails =
+    { id : Int
+    , login : String
+    , name : String
+    }
+
+accountDetailsDecoder : JD.Decoder AccountDetails
+accountDetailsDecoder =
+    JD.succeed AccountDetails
+    |> JDP.required "accountId" JD.int
+    |> JDP.required "accountLogin" JD.string
+    |> JDP.required "accountName" JD.string
+
+getAccountDetails : Int -> Authorized AccountDetails
+getAccountDetails accountId =
+    let url = "/api/account/" ++ String.fromInt accountId |> Url
+    in makeRequest url Get accountDetailsDecoder emptyBody
+        |> authorize
+

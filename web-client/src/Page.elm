@@ -81,6 +81,11 @@ update command model =
             dispatchRoute (pageSession page) newPage
             |> Fx.mapFx here
 
+        (AccountCommand cmd, Account accountPage) ->
+                A.update accountPage.authSession cmd accountPage.model
+                |> Fx.mapFx (HttpFx.map AccountCommand)
+                |> Fx.mapFx (here >> next)
+                |> Fx.map (\a -> Account { accountPage | model = a})
 
         (_, _) -> Fx.pure model
 

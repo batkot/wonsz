@@ -7,9 +7,13 @@ module Html.Extra exposing
     , escape
 
     , empty
+    , spinner
     )
 
-import Html exposing (Html, Attribute)
+import Assets 
+
+import Html exposing (Html, Attribute, img)
+import Html.Attributes exposing (src, class)
 import Html.Events exposing (keyCode, on)
 
 import Json.Decode as JD
@@ -42,3 +46,9 @@ onKeyDownInternal f =
 
 empty : Html a
 empty = Html.text ""
+
+spinner : Html a
+spinner = 
+    img [ class "spinner" 
+        , src Assets.singleSnake ]
+        []
