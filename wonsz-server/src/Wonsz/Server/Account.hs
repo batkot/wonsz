@@ -3,7 +3,6 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DerivingStrategies #-}
@@ -24,14 +23,24 @@ import Control.Monad.Error.Class (MonadError, throwError)
 import Servant (JSON, ReqBody, Capture, Get, Post, (:>), (:<|>)(..), err401, err403, err404, ServerError, ServerT, Handler)
 import Servant.Auth.Server (AuthResult(..), Auth, ThrowAll(..))
 
-import Wonsz.Server.Authentication (Protected, protected, AuthenticatedUser, getAuthenticatedUserId)
+import Wonsz.Server.Authentication (Protected, protected, AuthenticatedUser, getAuthenticatedUserId, protected2)
 
 import Wonsz.Users 
+import Wonsz.Users.Domain (getUserId, getUserName) -- tmp
 import Wonsz.Crypto (CryptoMonad)
 
-type AccountApi auth = 
-    Protected auth :> Capture "id" Int :> Get '[JSON] () 
-    :<|> Protected auth :> "changePassword" :> ReqBody '[JSON] ChangePasswordRequest :> Post '[JSON] ()
+type AccountApi auth = "account" :> Protected auth :> AccountApi'
+
+type AccountApi' = 
+        Capture "id" Int :> Get '[JSON] AccountDetails
+        :<|> "changePassword" :> ReqBody '[JSON] ChangePasswordRequest :> Post '[JSON] ()
+
+data AccountDetails = AccountDetails
+    { accountId :: !Int
+    , accountName :: !String
+    } 
+    deriving stock (Show, Eq, Generic)
+    deriving anyclass (FromJSON, ToJSON)
 
 data ChangePasswordRequest = ChangePasswordRequest 
     { newPassword :: !String 
@@ -40,21 +49,18 @@ data ChangePasswordRequest = ChangePasswordRequest
     deriving stock (Show, Eq, Generic)
     deriving anyclass (FromJSON, ToJSON)
 
-accountApi 
+accountApi
     :: UserMonad m 
-    => CryptoMonad m
     => MonadError ServerError m
-    => ServerT (AccountApi auth) m 
-accountApi = tmp :<|> tmp2
-
--- -.-''
-tmp (Authenticated user) = accountDetailsHandler user
-tmp2 (Authenticated user) = changePasswordHandler user
+    => CryptoMonad m
+    => AuthResult AuthenticatedUser
+    -> ServerT AccountApi' m 
+accountApi (Authenticated user) = accountDetailsHandler user :<|> changePasswordHandler user
+accountApi _ = const (throwError err401) :<|> const (throwError err401)
 
 changePasswordHandler
     :: UserMonad m 
     => CryptoMonad m
-    => MonadError ServerError m
     => AuthenticatedUser 
     -> ChangePasswordRequest
     -> m ()
@@ -68,9 +74,9 @@ accountDetailsHandler
     => MonadError ServerError m
     => AuthenticatedUser
     -> Int 
-    -> m ()
+    -> m AccountDetails
 accountDetailsHandler _ userId = do
     user <- getById userId
     case user of
         Nothing -> throwError err404
-        Just _ -> return ()
+        Just u -> return $ AccountDetails (getUserId u) ((Text.unpack . getUserName) u)

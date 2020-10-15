@@ -29,11 +29,12 @@ import Servant.Auth.Server (generateKey, JWT)
 import Servant.Auth.Client
 
 import Wonsz.Server (app, Api)
-import Wonsz.Server.Authentication (AuthToken, LoginRequest(..), ChangePasswordRequest(..), rawToken)
+import Wonsz.Server.Authentication (AuthToken, LoginRequest(..), rawToken)
 import Wonsz.Server.Season (SeasonOverview(..))
 
 import Wonsz.Users (UserMonad(..))
 import Wonsz.Users.Domain (User(..))
+import Wonsz.Crypto (CryptoMonad(..))
 
 withWonszApp :: (IO WonszClient -> TestTree) -> TestTree
 withWonszApp tests = 
@@ -56,18 +57,18 @@ testApi = Proxy
 data WonszClient = WonszClient
     { login :: LoginRequest -> ClientM AuthToken
     , renewToken :: Token -> ClientM AuthToken
-    , changePassword :: Token -> ChangePasswordRequest -> ClientM ()
+    -- , changePassword :: Token -> ChangePasswordRequest -> ClientM ()
     , getOverview :: Token -> ClientM SeasonOverview
     , env :: ClientEnv
     }
 
 createApiClient :: Port -> IO WonszClient
 createApiClient port = do
-    let overviewClient :<|> ((renewTokenClient :<|> changePassword) :<|> loginClient) :<|> _ = client testApi
+    let (seasonClient :<|> accountClient) :<|> (renewTokenClient :<|> loginClient) :<|> _ = client testApi
     baseUrl <- parseBaseUrl "http://localhost"
     manager <- newManager defaultManagerSettings
     let clientEnv = mkClientEnv manager (baseUrl { baseUrlPort = port })
-    return $ WonszClient loginClient renewTokenClient changePassword overviewClient clientEnv
+    return $ WonszClient loginClient renewTokenClient seasonClient clientEnv
 
 ----
 userName :: String
@@ -90,3 +91,5 @@ instance Monad m => UserMonad (IdentityT m) where
     getById id = return . Just $ User id "" "" (pack goodPassword)
     saveUser = const $ return ()
 
+instance Monad m => CryptoMonad (IdentityT m) where
+    hash = return . id

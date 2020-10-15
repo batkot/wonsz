@@ -22,6 +22,7 @@ module Wonsz.Server.Authentication
 
     , Protected
     , protected 
+    , protected2
     ) where
 
 import Servant (JSON, ReqBody, Capture, Get, Post, (:>), (:<|>)(..), err401, err403, ServerError, ServerT, Handler)
@@ -120,6 +121,14 @@ protected
     -> m a
 protected action (Authenticated user) = action user
 protected _ _ = throwError err401
+
+protected2
+    :: ThrowAll a
+    => (AuthenticatedUser -> a)
+    -> AuthResult AuthenticatedUser 
+    -> a
+protected2 f (Authenticated user) = f user
+protected2 _ _ = throwAll err401
 
 sessionApi 
     :: UserMonad m 

@@ -19,7 +19,7 @@ import Servant.Client
 import Servant.Auth.Client
 import Resources.WonszApp 
 
-import Wonsz.Server.Authentication (rawToken, ChangePasswordRequest(..))
+import Wonsz.Server.Authentication (rawToken)
 
 test_tests :: TestTree
 test_tests = withWonszApp $ \client -> 
@@ -53,18 +53,18 @@ test_tests = withWonszApp $ \client ->
                 return $ responseStatus == status401
             ]
 
-        , testGroup "Change password tests"
-            [ testProperty "After change can't login with old password" $ \newPassword -> ioProperty $ do
-                c <- client
-                Right authToken <- runClientM ((login c) validLoginRequest) (env c)
-                let token = Token . rawToken $ authToken
-                let changePasswordRequest = ChangePasswordRequest newPassword ""
-                runClientM (changePassword c token changePasswordRequest) (env c)
+        -- , testGroup "Change password tests"
+        --     [ testProperty "After change can't login with old password" $ \newPassword -> ioProperty $ do
+        --         c <- client
+        --         Right authToken <- runClientM ((login c) validLoginRequest) (env c)
+        --         let token = Token . rawToken $ authToken
+        --         let changePasswordRequest = ChangePasswordRequest newPassword ""
+        --         runClientM (changePassword c token changePasswordRequest) (env c)
                 
-                -- Fails because Resource.WonszApp doesn't maintain state
-                Left (FailureResponse _ (Response responseStatus _ _ _)) <- runClientM ((login c) validLoginRequest) (env c)
-                responseStatus @?= status401
-            ]
+        --         -- Fails because Resource.WonszApp doesn't maintain state
+        --         Left (FailureResponse _ (Response responseStatus _ _ _)) <- runClientM ((login c) validLoginRequest) (env c)
+        --         responseStatus @?= status401
+        --     ]
         ]
 
 newtype BadAuthToken = BadAuthToken { getToken :: String } deriving (Show)

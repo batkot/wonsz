@@ -13,14 +13,15 @@ module Wonsz.Server.Season
     ) where
 
 import Servant ((:>), Get, JSON, ServerT, ServerError)
-import Servant.Auth.Server (Auth)
-import Wonsz.Server.Authentication (protected, AuthenticatedUser)
+import Servant.Auth.Server (Auth, AuthResult)
 
 import GHC.Generics
 import Data.Text (Text)
 import Data.Aeson (ToJSON, FromJSON)
 import Control.Monad.Error.Class (MonadError)
 import Control.Monad.IO.Class (MonadIO)
+
+import Wonsz.Server.Authentication (Protected, protected, AuthenticatedUser)
 
 data SeasonOverview = SeasonOverview 
     { participants :: [ParticipantOverview]
@@ -39,13 +40,16 @@ data ParticipantOverview = ParticipantOverview
 instance ToJSON ParticipantOverview 
 instance FromJSON ParticipantOverview
 
-type SeasonApi auth = Auth auth AuthenticatedUser :> "overview" :> Get '[JSON] SeasonOverview
+type SeasonApi auth = "season" :> Protected auth :> SeasonApi'
+
+type SeasonApi' = "overview" :> Get '[JSON] SeasonOverview
 
 seasonApi 
-    :: MonadIO m 
+    :: Monad m
     => MonadError ServerError m
-    =>  ServerT (SeasonApi auth) m
-seasonApi = protected $ const overviewHandler 
+    => AuthResult AuthenticatedUser
+    -> ServerT SeasonApi' m
+seasonApi = protected $ const overviewHandler
 
 overviewHandler :: Monad m => m SeasonOverview
 overviewHandler = return $ SeasonOverview participants
