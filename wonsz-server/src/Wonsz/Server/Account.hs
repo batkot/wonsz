@@ -26,7 +26,7 @@ import Servant.Auth.Server (AuthResult(..), Auth, ThrowAll(..))
 import Wonsz.Server.Authentication (Protected, protected, AuthenticatedUser, getAuthenticatedUserId, protected2)
 
 import Wonsz.Users 
-import Wonsz.Users.Domain (getUserId, getUserName) -- tmp
+import Wonsz.Users.Domain (getUserId, getUserName, getUserLogin) -- tmp
 import Wonsz.Crypto (CryptoMonad)
 
 type AccountApi auth = "account" :> Protected auth :> AccountApi'
@@ -37,7 +37,9 @@ type AccountApi' =
 
 data AccountDetails = AccountDetails
     { accountId :: !Int
+    , accountLogin :: !String
     , accountName :: !String
+    , accountAvatarUrl :: !String
     } 
     deriving stock (Show, Eq, Generic)
     deriving anyclass (FromJSON, ToJSON)
@@ -79,4 +81,8 @@ accountDetailsHandler _ userId = do
     user <- getById userId
     case user of
         Nothing -> throwError err404
-        Just u -> return $ AccountDetails (getUserId u) ((Text.unpack . getUserName) u)
+        Just u -> return $ AccountDetails 
+            (getUserId u) 
+            ((Text.unpack . getUserLogin) u) 
+            ((Text.unpack . getUserName) u)
+            ("/static/" <> (Text.unpack . getUserLogin) u <> ".jpg" )

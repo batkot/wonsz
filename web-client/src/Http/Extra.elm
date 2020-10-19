@@ -6,6 +6,7 @@ module Http.Extra exposing
 
     , HttpMethod(..)
     , Url(..)
+    , unUrl
     , HasBaseUrl
     , execute
 

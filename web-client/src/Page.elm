@@ -16,6 +16,8 @@ module Page exposing
 
 import Html exposing (Html)
 
+import Http.Extra exposing (HasBaseUrl)
+
 import Lang exposing (HasDict)
 
 import Auth exposing (AuthSession)
@@ -157,20 +159,22 @@ updateAuthSession session authorized = { authorized | authSession = session }
 getSession : Authorized a -> Session
 getSession { authSession } = Authenticated authSession
 
-view : HasDict a -> PageModel -> PageView PageCommand
-view hasDict model = 
+view : HasBaseUrl (HasDict a) -> PageModel -> PageView PageCommand
+view env model = 
     case model of 
         (Login loginPage) -> 
-            L.view hasDict loginPage.model
+            L.view env loginPage.model
             |> Html.map LoginCommand
             |> pageView loginPage.title
 
         (Account accountPage) ->
-            Html.div [] []
+            A.view env accountPage.model
+            |> Html.map AccountCommand
             |> pageView accountPage.title
 
         (NotFound notFoundPage) ->
-            pageView notFoundPage.title NF.view
+            NF.view env
+            |> pageView notFoundPage.title 
 
 pageView : String -> Html a -> PageView a
 pageView title html = 

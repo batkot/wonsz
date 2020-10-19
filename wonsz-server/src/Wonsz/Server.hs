@@ -23,8 +23,7 @@ import Wonsz.Users (UserMonad)
 import Wonsz.Crypto (CryptoMonad)
 
 type AppApi auth =
-    "season" :> SeasonApi auth
-    :<|> "account" :> AccountApi auth
+    "season" :> SeasonApi auth :<|> AccountApi auth
 
 type Api auth = 
     ("api" :> AppApi auth)
@@ -57,4 +56,5 @@ app runMonadStack key =
     api = Proxy
     jwtSettings = defaultJWTSettings key
     context = defaultCookieSettings :. jwtSettings :. EmptyContext
-    settingsProxy = Proxy :: Proxy '[CookieSettings, JWTSettings]
+    settingsProxy :: Proxy '[CookieSettings, JWTSettings]
+    settingsProxy = Proxy 

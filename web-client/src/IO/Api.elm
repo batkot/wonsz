@@ -63,13 +63,14 @@ seasonParticipantDecoder =
 
 getSeasonOverview : Authorized SeasonOverview
 getSeasonOverview = 
-    makeRequest (Url "/api/overview") Get seasonOverviewDecoder emptyBody
+    makeRequest (Url "/api/season/overview") Get seasonOverviewDecoder emptyBody
     |> authorize
 
 type alias AccountDetails =
     { id : Int
     , login : String
     , name : String
+    , avatarUrl : String
     }
 
 accountDetailsDecoder : JD.Decoder AccountDetails
@@ -78,6 +79,7 @@ accountDetailsDecoder =
     |> JDP.required "accountId" JD.int
     |> JDP.required "accountLogin" JD.string
     |> JDP.required "accountName" JD.string
+    |> JDP.required "accountAvatarUrl" JD.string
 
 getAccountDetails : Int -> Authorized AccountDetails
 getAccountDetails accountId =

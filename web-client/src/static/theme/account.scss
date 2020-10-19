@@ -1,0 +1,76 @@
+@import "colors.scss";
+
+.account-container {
+    width: 100%;
+
+    .avatar {
+        display: inline-block;
+        img {
+            width: 100%;
+        }
+    }
+
+    .details {
+        display: inline-block;
+        vertical-align: top;
+
+        .change-password-btn {
+            cursor: pointer;
+
+            &:hover {
+                text-decoration: underline;
+            }
+        }
+
+        .password-change {
+            input {
+                display: block;
+                margin: 8px 0px;
+                padding: 8px 5px;
+                border: 0px;
+                border-bottom: 1px solid $grey;
+                box-shadow: none;
+                background: transparent;
+                color: $grey;
+
+                &:focus {
+                    border-bottom: 1px solid $white;
+                    color: $white;
+                }
+            }
+        }
+    }
+}
+
+@media screen and (max-width: 500px) {
+    .account-container {
+        .avatar {
+            width: 100%;
+
+            img {
+                max-height: 150px;
+                object-fit: cover;
+            }
+        }
+
+        .details {
+            width: 100%;
+        }
+    }
+}
+
+@media screen and (min-width: 500px) {
+    .account-container {
+        .avatar {
+            width: 50%;
+
+            img {
+                height: 100%;
+            }
+        }
+
+        .details {
+            width: 50%;
+        }
+    }
+}

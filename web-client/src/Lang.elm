@@ -7,6 +7,15 @@ type alias Dict =
     , logoutAction : String
     , badCredentialsMessage : String
     , connectionErrorMessage : String
+
+    , notFoundMessage : String
+    , confirmLabel : String
+    , denyLabel : String
+
+    , changePasswordAction : String
+    , currentPasswordPlaceholder : String
+    , newPasswordPlaceholder : String
+
     , pointLabel : String
     }
 

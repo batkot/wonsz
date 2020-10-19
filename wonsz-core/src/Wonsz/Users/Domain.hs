@@ -7,6 +7,7 @@ module Wonsz.Users.Domain
     -- use optics
     , getUserId 
     , getUserName 
+    , getUserLogin
 
     , Password
     , makePassword
@@ -47,6 +48,9 @@ getUserId = _userId
 
 getUserName :: User -> Text
 getUserName = _userName
+
+getUserLogin :: User -> Text
+getUserLogin = _userLogin
 
 verifyPassword 
     :: CryptoMonad m
