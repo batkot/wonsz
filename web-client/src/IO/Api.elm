@@ -8,6 +8,9 @@ module IO.Api exposing
 
     , getAccountDetails
     , AccountDetails
+
+    , ChangePasswordRequest
+    , changePassword
     )
 
 import Http exposing (jsonBody, emptyBody)
@@ -87,3 +90,16 @@ getAccountDetails accountId =
     in makeRequest url Get accountDetailsDecoder emptyBody
         |> authorize
 
+type alias ChangePasswordRequest = 
+    { newPassword : String
+    , currentPassword : String
+    }
+
+changePassword : ChangePasswordRequest -> Authorized {}
+changePassword request = 
+    let requestBody = JE.object
+            [ ("newPassword", JE.string request.newPassword)
+            , ("currentPassword", JE.string request.currentPassword)]
+            |> jsonBody
+    in makeRequest (Url "/api/account/changePassword") Post (JD.succeed {}) requestBody
+        |> authorize

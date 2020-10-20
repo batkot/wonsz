@@ -9,9 +9,9 @@ module Page.Account exposing
 
 import Http.Extra as HE
 
-import Html exposing (Html, div, img, text, input)
-import Html.Extra exposing (spinner, onKey)
-import Html.Attributes exposing (src, class, type_, placeholder, value)
+import Html exposing (Html, div, img, text, input, button)
+import Html.Extra exposing (spinner, onKey, enter)
+import Html.Attributes exposing (src, class, type_, placeholder, value, disabled)
 import Html.Events exposing (onClick, onInput)
 
 import Page.NotFound as NF
@@ -25,15 +25,17 @@ import Effect.Compose as Fx exposing (FxComp)
 import Effect.Http exposing (HttpFx(..))
 import Effect.Command exposing (CommandFx(..))
 
-import IO.Api exposing (getAccountDetails, AccountDetails)
+import IO.Api exposing (getAccountDetails, AccountDetails, changePassword, ChangePasswordRequest)
 
 type Command
     = ShowAccount AccountId 
     | GotAccount AccountDetails
     | InitPasswordChange
-    | AbandonPasswordChange
+    | ClosePasswordChange
     | CurrentPasswordChanged String
     | NewPasswordChanged String
+    | RequestPasswordChange PasswordChangeModel
+    | PasswordChangeFailed String
     | GotError String
 
 type Model
@@ -49,11 +51,17 @@ type alias AccountModel =
 type alias PasswordChangeModel =
     { currentPassword : String
     , newPassword : String
-    , error : String 
+    , status : PasswordChangeStatus
     }
 
+type PasswordChangeStatus 
+    = InProgress
+    | Changing
+    | Failure String
+
+
 newPasswordChange : PasswordChangeModel
-newPasswordChange = PasswordChangeModel "" "" ""
+newPasswordChange = PasswordChangeModel "" "" InProgress
 
 update : AuthSession -> Command -> Model -> Fx (HttpFx Command) Model
 update auth command model =
@@ -76,7 +84,7 @@ update auth command model =
         (InitPasswordChange, Loaded m) -> 
             Fx.pure <| Loaded { m | passwordChange = Just newPasswordChange }
 
-        (AbandonPasswordChange, Loaded m) -> 
+        (ClosePasswordChange, Loaded m) -> 
             Fx.pure <| Loaded { m | passwordChange = Nothing }
 
         (CurrentPasswordChanged x, Loaded m) -> 
@@ -86,6 +94,14 @@ update auth command model =
         (NewPasswordChanged x, Loaded m) -> 
             let newModel = Maybe.map (\p -> { p | newPassword = x }) m.passwordChange
             in Fx.pure <| Loaded { m | passwordChange = newModel }
+
+        (RequestPasswordChange change, Loaded m) -> 
+            let apiCall = changePassword (ChangePasswordRequest change.currentPassword change.newPassword) auth
+                        |> HE.mapRequest (always ClosePasswordChange)
+                httpFx = Request apiCall (always (PasswordChangeFailed "Error"))
+                newModel = Maybe.map (\p -> { p | status = Changing }) m.passwordChange
+            in Loaded { m | passwordChange = newModel }
+                |> Fx.addFx httpFx
 
         (_, _) ->
             Fx.pure model
@@ -101,11 +117,11 @@ view : HE.HasBaseUrl (HasDict a) -> Model -> Html Command
 view env model = 
     case model of 
         Loading _ -> spinner
-        Loaded x -> accountDetailsView env x
+        Loaded x -> accountView env x
         Error _ -> NF.view env
 
-accountDetailsView : HE.HasBaseUrl (HasDict a) -> AccountModel -> Html Command
-accountDetailsView { baseUrl, dict } model = 
+accountView : HE.HasBaseUrl (HasDict a) -> AccountModel -> Html Command
+accountView { baseUrl, dict } model = 
     let changePswdView = Maybe.map (changePasswordView dict) model.passwordChange
                         |> Maybe.withDefault (changePasswordButton dict)
     in
@@ -116,7 +132,9 @@ accountDetailsView { baseUrl, dict } model =
 
             , div
                 [ class "details" ]
-                [ changePswdView
+                [ div [ class "name" ] [ text model.details.name ]
+                , div [ class "login" ] [ text model.details.login ]
+                , changePswdView
                 ]
             ]
 
@@ -128,24 +146,31 @@ changePasswordButton dict =
 
 changePasswordView : Dict -> PasswordChangeModel -> Html Command
 changePasswordView dict model = 
-    div [ class "password-change" ] 
-        [ input 
+    let isSaving = case model.status of 
+                Changing -> True
+                _ -> False
+    in div [ class "password-change" ] 
+        [ div [] [ input 
             [ type_ "password"
-            , class "current-password"
             , placeholder dict.currentPasswordPlaceholder
             , value model.currentPassword
+            , disabled isSaving
             , onInput CurrentPasswordChanged
-            ]
-            -- , onKey enter RequestLogin ] 
+            , onKey enter (RequestPasswordChange model) ] 
             []
+            ]
         , input 
             [ type_ "password"
-            , class "new-password"
             , placeholder dict.currentPasswordPlaceholder
             , placeholder dict.newPasswordPlaceholder
             , value model.newPassword
+            , disabled isSaving
             , onInput NewPasswordChanged
-            ]
-            -- , onKey enter RequestLogin ] 
+            , onKey enter (RequestPasswordChange model) ] 
             []
+        , div 
+            [ class "buttons" ]
+            [ div [ class "btn cancel", onClick ClosePasswordChange ] [ text dict.denyLabel ]
+            , div [ class "btn save", onClick (RequestPasswordChange model) ] [ text dict.confirmLabel ]
+            ]
         ]
