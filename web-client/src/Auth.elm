@@ -4,6 +4,7 @@ module Auth exposing
 
     , UserDescription
     , userName
+    , userId
 
     , TokenString
     , parseToken
@@ -60,6 +61,9 @@ type alias UserData =
 
 userName : UserDescription -> String
 userName (UserDescription u) = u.userName
+
+userId : UserDescription -> Int
+userId (UserDescription u) = u.id
 
 userDescriptionDecoder : JD.Decoder UserDescription
 userDescriptionDecoder = 

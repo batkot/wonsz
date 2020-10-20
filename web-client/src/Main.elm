@@ -2,8 +2,8 @@ module Main exposing (main)
 
 import Browser
 
-import Html exposing (Html, div, text, span, img)
-import Html.Attributes exposing (class, src)
+import Html exposing (Html, div, text, span, img, a)
+import Html.Attributes exposing (class, src, href)
 import Html.Events exposing (onClick)
 
 import Assets
@@ -155,8 +155,10 @@ loggedView d auth subContent =
             [ img [ src Assets.logo ] [] 
             , div 
                 [ class "logged-user" ]
-                [ span 
-                    [ class "username" ]
+                [ a 
+                    [ class "username" 
+                    , href ("/#account/" ++ ((Auth.user >> Auth.userId >> String.fromInt) auth))
+                    ]
                     [ text ((Auth.user >> Auth.userName) auth) ]
                 , span 
                     [ class "logout-btn" 
