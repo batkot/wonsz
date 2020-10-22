@@ -11,7 +11,7 @@ import Http.Extra as HE
 
 import Html exposing (Html, div, img, text, input, button)
 import Html.Extra exposing (spinner, onKey, enter)
-import Html.Attributes exposing (src, class, type_, placeholder, value, disabled)
+import Html.Attributes exposing (src, class, classList, type_, placeholder, value, disabled)
 import Html.Events exposing (onClick, onInput)
 
 import Page.NotFound as NF
@@ -100,11 +100,18 @@ update auth command model =
                         |> HE.mapRequest (always ClosePasswordChange)
                 httpFx = Request apiCall (always (PasswordChangeFailed "Error"))
                 newModel = Maybe.map (\p -> { p | status = Changing }) m.passwordChange
-            in Loaded { m | passwordChange = newModel }
-                |> Fx.addFx httpFx
+            in if isPasswordChangeModelInvalid change 
+                then Fx.pure (Loaded m)
+                else Loaded { m | passwordChange = newModel }
+                    |> Fx.addFx httpFx
 
         (_, _) ->
             Fx.pure model
+
+isPasswordChangeModelInvalid : PasswordChangeModel -> Bool
+isPasswordChangeModelInvalid { currentPassword, newPassword } = 
+    [currentPassword, newPassword]
+    |> List.any String.isEmpty
 
 type alias AccountId = Int
 
@@ -150,7 +157,7 @@ changePasswordView dict model =
                 Changing -> True
                 _ -> False
     in div [ class "password-change" ] 
-        [ div [] [ input 
+        [ input 
             [ type_ "password"
             , placeholder dict.currentPasswordPlaceholder
             , value model.currentPassword
@@ -158,7 +165,6 @@ changePasswordView dict model =
             , onInput CurrentPasswordChanged
             , onKey enter (RequestPasswordChange model) ] 
             []
-            ]
         , input 
             [ type_ "password"
             , placeholder dict.currentPasswordPlaceholder
@@ -171,6 +177,12 @@ changePasswordView dict model =
         , div 
             [ class "buttons" ]
             [ div [ class "btn cancel", onClick ClosePasswordChange ] [ text dict.denyLabel ]
-            , div [ class "btn save", onClick (RequestPasswordChange model) ] [ text dict.confirmLabel ]
+            , div 
+                [ classList 
+                    [ ("btn save", True) 
+                    , ("disabled", isPasswordChangeModelInvalid model)
+                    ]
+                , onClick (RequestPasswordChange model) ] 
+                [ text dict.confirmLabel ]
             ]
         ]

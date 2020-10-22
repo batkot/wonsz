@@ -14,7 +14,6 @@
         display: inline-block;
         vertical-align: top;
         text-align: left;
-        max-width: 300px;
 
         .name {
             text-transform: uppercase;
@@ -38,6 +37,7 @@
 
         .password-change {
             margin-top: 5px;
+            max-width: 250px;
 
             input {
                 display: block;
@@ -71,9 +71,14 @@
                     padding: 10px 2px;
                     border-radius: .25rem;
 
-                    &:hover {
+                    &:not(.disabled):hover {
                         color: $green;
                         background: $background;
+                    }
+
+                    &.disabled {
+                        color: #AAA;
+                        cursor: not-allowed;
                     }
                 }
 
