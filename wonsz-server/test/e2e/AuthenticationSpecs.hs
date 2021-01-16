@@ -15,16 +15,16 @@ import Test.QuickCheck (Arbitrary(..), getASCIIString)
 
 import Network.HTTP.Types.Status (status401)
 
-import Servant.Client 
+import Servant.Client
 import Servant.Auth.Client
-import Resources.WonszApp 
+import Resources.WonszApp
 
 import Wonsz.Server.Authentication (rawToken)
 
 test_tests :: TestTree
-test_tests = withWonszApp $ \client -> 
-    testGroup "Authentication Tests" 
-        [ testGroup "Login workflow tests" 
+test_tests = withWonszApp $ \client ->
+    testGroup "Authentication Tests"
+        [ testGroup "Login workflow tests"
             [ testCase "Given wrong credentails should raise 401" $ do
                 c <- client
                 Left (FailureResponse _ (Response responseStatus _ _ _)) <- runClientM ((login c) invalidLoginRequest) (env c)
@@ -37,7 +37,7 @@ test_tests = withWonszApp $ \client ->
                 result <- runClientM (getOverview c token) (env c)
                 isRight result @? "Should get result"
 
-            , testCase "Token renewal return new working token" $ do 
+            , testCase "Token renewal return new working token" $ do
                 c <- client
                 Right authToken <- runClientM ((login c) validLoginRequest) (env c)
                 let token = Token . rawToken $ authToken
@@ -46,7 +46,7 @@ test_tests = withWonszApp $ \client ->
                 result <- runClientM (getOverview c newToken) (env c)
                 isRight result @? "Should get result"
 
-            , testProperty "Given fake token should return 401" $ \(BadAuthToken badTokenString) -> ioProperty $ do 
+            , testProperty "Given fake token should return 401" $ \(BadAuthToken badTokenString) -> ioProperty $ do
                 c <- client
                 let badToken = Token . pack $ badTokenString
                 Left (FailureResponse _ (Response responseStatus _ _ _)) <- runClientM (getOverview c badToken) (env c)
@@ -60,7 +60,7 @@ test_tests = withWonszApp $ \client ->
         --         let token = Token . rawToken $ authToken
         --         let changePasswordRequest = ChangePasswordRequest newPassword ""
         --         runClientM (changePassword c token changePasswordRequest) (env c)
-                
+
         --         -- Fails because Resource.WonszApp doesn't maintain state
         --         Left (FailureResponse _ (Response responseStatus _ _ _)) <- runClientM ((login c) validLoginRequest) (env c)
         --         responseStatus @?= status401

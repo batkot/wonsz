@@ -27,8 +27,8 @@ import Control.Monad.Error.Class (MonadError)
 import Wonsz.Crypto (runPlainTextCryptoT, PlainTextCryptoT(..))
 
 main :: IO ()
-main = 
-    getOptions >>= \case 
+main =
+    getOptions >>= \case
         Left err -> putStrLn err
         Right opt -> runServer opt
 
@@ -44,7 +44,7 @@ runServer opt = do
     run (optPort opt) $ cors (const (Just policy)) $ app (runPlainTextCryptoT . runPostgresBackEndT pool) jwt
 
 -- inMemoryStack =
---     runInMemoryKvsT users . runKvsUserMonadT 
+--     runInMemoryKvsT users . runKvsUserMonadT
 --   where
 --     users =  HM.fromList usersList
 --       where
@@ -53,10 +53,10 @@ runServer opt = do
 --             , User 2 "Makkay" "Makkay" "pswd"
 --             ] >>= \u -> [(show (_userId u), u), (show (_userLogin u), u)]
 
-createCorsPolicy :: Maybe String -> CorsResourcePolicy 
-createCorsPolicy origin = 
+createCorsPolicy :: Maybe String -> CorsResourcePolicy
+createCorsPolicy origin =
     simpleCorsResourcePolicy { corsRequestHeaders = [ "authorization", "content-type" ], corsOrigins = corsOrigin <$> origin }
   where
-    corsOrigin allowedOrigin = ([fromString allowedOrigin], True) 
+    corsOrigin allowedOrigin = ([fromString allowedOrigin], True)
 
 deriving newtype instance MonadError err m => MonadError err (PlainTextCryptoT m)

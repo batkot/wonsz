@@ -3,7 +3,7 @@
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE DataKinds #-}
 
-module Wonsz.Server 
+module Wonsz.Server
     ( app, Api )
     where
 
@@ -25,36 +25,36 @@ import Wonsz.Crypto (CryptoMonad)
 type AppApi auth =
     "season" :> SeasonApi auth :<|> AccountApi auth
 
-type Api auth = 
+type Api auth =
     ("api" :> AppApi auth)
     :<|> "auth" :> AuthApi auth
     :<|> "static" :> Raw
 
-server 
-    :: MonadIO m 
+server
+    :: MonadIO m
     => MonadError ServerError m
     => UserMonad m
     => CryptoMonad m
-    => JWTSettings 
+    => JWTSettings
     -> ServerT (Api auth) m
 server jwt = api :<|> authApi jwt :<|> serveDirectoryWebApp "static"
   where
     api = seasonApi :<|> accountApi
 
-app :: MonadIO m 
+app :: MonadIO m
     => MonadError ServerError m
     => UserMonad m
     => CryptoMonad m
     => (forall x. m x -> Handler x)
-    -> JWK 
+    -> JWK
     -> Application
-app runMonadStack key = 
-    serveWithContext api context $ 
+app runMonadStack key =
+    serveWithContext api context $
         hoistServerWithContext api settingsProxy runMonadStack $ server jwtSettings
-  where 
+  where
     api :: Proxy (Api '[JWT])
     api = Proxy
     jwtSettings = defaultJWTSettings key
     context = defaultCookieSettings :. jwtSettings :. EmptyContext
     settingsProxy :: Proxy '[CookieSettings, JWTSettings]
-    settingsProxy = Proxy 
+    settingsProxy = Proxy

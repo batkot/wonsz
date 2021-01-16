@@ -21,7 +21,7 @@ module Wonsz.Server.Authentication
     , LoginRequest(..)
 
     , Protected
-    , protected 
+    , protected
     , protected2
     ) where
 
@@ -48,7 +48,7 @@ import Data.Text as Text
 data AuthenticatedUser = AuthenticatedUser
     { auId :: !Int
     , name :: !String
-    } 
+    }
     deriving stock (Show, Eq, Generic, Read)
     deriving anyclass (FromJSON, ToJSON, FromJWT, ToJWT)
 
@@ -60,7 +60,7 @@ getAuthenticatedUserName :: AuthenticatedUser -> String
 getAuthenticatedUserName = name
 
 instance ToJSON AuthToken where
-  toJSON = toJSON . toString . unAuthToken 
+  toJSON = toJSON . toString . unAuthToken
 
 instance FromJSON AuthToken where
   parseJSON val = AuthToken . fromString <$> parseJSON val
@@ -68,7 +68,7 @@ instance FromJSON AuthToken where
 data LoginRequest = LoginRequest
     { username :: !String
     , password :: !String
-    } 
+    }
     deriving stock (Show, Eq, Generic)
     deriving anyclass (FromJSON, ToJSON)
 
@@ -85,14 +85,14 @@ type SessionApi auth = Protected auth :> "renewToken" :> Post '[JSON] AuthToken
 
 type AuthApi auth = SessionApi auth :<|> LoginApi
 
-authApi 
+authApi
     :: MonadIO m
     => UserMonad m
     => CryptoMonad m
     => MonadError ServerError m
-    => JWTSettings 
+    => JWTSettings
     -> ServerT (AuthApi auth) m
-authApi jwt = sessionApi tokenCreator :<|> loginHandler tokenCreator 
+authApi jwt = sessionApi tokenCreator :<|> loginHandler tokenCreator
   where
     tokenCreator = createJWT jwt
 
@@ -125,33 +125,33 @@ protected _ _ = throwError err401
 protected2
     :: ThrowAll a
     => (AuthenticatedUser -> a)
-    -> AuthResult AuthenticatedUser 
+    -> AuthResult AuthenticatedUser
     -> a
 protected2 f (Authenticated user) = f user
 protected2 _ _ = throwAll err401
 
-sessionApi 
-    :: UserMonad m 
+sessionApi
+    :: UserMonad m
     => MonadError ServerError m
     => AuthTokenCreator m
     -> ServerT (SessionApi auth) m
-sessionApi tokenCreator = protected (renewToken tokenCreator) 
+sessionApi tokenCreator = protected (renewToken tokenCreator)
 
-renewToken 
+renewToken
     :: MonadError ServerError m
     => AuthTokenCreator m
-    -> AuthenticatedUser 
+    -> AuthenticatedUser
     -> m AuthToken
-renewToken createToken user = 
+renewToken createToken user =
     createToken user >>= \case
         Nothing -> throwError err401
         Just token -> return token
 
 type AuthTokenCreator m = AuthenticatedUser -> m (Maybe AuthToken)
 
-createJWT 
-     :: MonadIO m 
-     => JWTSettings 
+createJWT
+     :: MonadIO m
+     => JWTSettings
      -> AuthTokenCreator m
 createJWT jwt user = liftIO $ do
      time <- addUTCTime (3600 :: NominalDiffTime) <$> getCurrentTime

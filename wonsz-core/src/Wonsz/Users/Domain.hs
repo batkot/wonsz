@@ -2,19 +2,19 @@
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE DerivingStrategies #-}
 
-module Wonsz.Users.Domain 
+module Wonsz.Users.Domain
     ( User(..) -- hot wired in Main.hs, fix it
     -- use optics
-    , getUserId 
-    , getUserName 
+    , getUserId
+    , getUserName
     , getUserLogin
 
     , Password
     , makePassword
     , verifyPassword
 
-    , CanChangePassword 
-    , canChangePassword 
+    , CanChangePassword
+    , canChangePassword
     , changePassword
     ) where
 
@@ -27,11 +27,11 @@ import Wonsz.Crypto (CryptoMonad(..))
 
 
 -- User domain representation
--- actions: 
+-- actions:
 --  Login/VerifyPassword -> return Some user info
---  ChangePassword 
+--  ChangePassword
 
-newtype Password = Password { unPassword :: ByteString } 
+newtype Password = Password { unPassword :: ByteString }
 
 makePassword :: Text -> Maybe Password
 makePassword  = Just . Password . encodeUtf8
@@ -52,10 +52,10 @@ getUserName = _userName
 getUserLogin :: User -> Text
 getUserLogin = _userLogin
 
-verifyPassword 
+verifyPassword
     :: CryptoMonad m
-    => User 
-    -> Password 
+    => User
+    -> Password
     -> m (Maybe User)
 verifyPassword user (Password password) = do
     pswd <- hash password
@@ -66,14 +66,14 @@ verifyPassword user (Password password) = do
 newtype CanChangePassword changer changee = CanChangePassword User
 
 canChangePassword :: Named changer User -> Named changee User -> Maybe (changer `CanChangePassword` changee)
-canChangePassword (Named changer) (Named changee) 
+canChangePassword (Named changer) (Named changee)
   | _userId changer == _userId changee    = Just $ CanChangePassword changee
   | otherwise = Nothing
 
-changePassword 
+changePassword
     :: CryptoMonad m
-    => Named changer User 
-    -> Named changee User 
+    => Named changer User
+    -> Named changee User
     -> Password
     -> changer `CanChangePassword` changee
     -> m User

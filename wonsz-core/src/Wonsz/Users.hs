@@ -19,7 +19,7 @@ import Control.Monad.Trans.Class (MonadTrans(..))
 
 import Wonsz.Named (Named, name)
 import Wonsz.Crypto (CryptoMonad(..))
-import qualified Wonsz.Users.Domain as Domain 
+import qualified Wonsz.Users.Domain as Domain
 
 data UserDescription = UserDescription
     { userId :: !Int
@@ -28,16 +28,16 @@ data UserDescription = UserDescription
 
 type UserName = Text
 
-class Monad m => UserMonad m where 
+class Monad m => UserMonad m where
     getUser :: UserName -> m (Maybe Domain.User)
     getById :: Int -> m (Maybe Domain.User)
     saveUser :: Domain.User -> m ()
 
 instance {-# OVERLAPPABLE #-}
-    ( UserMonad m 
-    , MonadTrans t 
+    ( UserMonad m
+    , MonadTrans t
     , Monad (t m)
-    ) => UserMonad (t m) where 
+    ) => UserMonad (t m) where
     getUser = lift . getUser
     getById = lift . getById
     saveUser = lift . saveUser
@@ -47,8 +47,8 @@ data LoginCommand = LoginCommand
     , _loginPassword :: !Text
     } deriving (Eq, Show)
 
-login 
-    :: UserMonad m 
+login
+    :: UserMonad m
     => CryptoMonad m
     => LoginCommand
     -> m (Maybe UserDescription)
@@ -63,17 +63,17 @@ data ChangePasswordCommand = ChangePasswordCommand
     , _newPassword :: !Text
     }
 
-changePassword 
+changePassword
     :: UserMonad m
     => CryptoMonad m
     => ChangePasswordCommand
     -> m ()
 changePassword ChangePasswordCommand{..} = do
     maybeChanger <- getById _changerUserId
-    maybeChangee <- getById _changeeUserId 
+    maybeChangee <- getById _changeeUserId
 
-    case (maybeChanger, maybeChangee) of 
-        (Just changer, Just changee) -> 
+    case (maybeChanger, maybeChangee) of
+        (Just changer, Just changee) ->
             name changer $ \namedChanger ->
                 name changee $ \namedChangee ->
                     case (Domain.canChangePassword namedChanger namedChangee, Domain.makePassword _newPassword) of

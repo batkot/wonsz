@@ -4,7 +4,7 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE OverloadedStrings #-}
 
-module Wonsz.Server.Season 
+module Wonsz.Server.Season
     ( SeasonApi
     , seasonApi
 
@@ -23,12 +23,12 @@ import Control.Monad.IO.Class (MonadIO)
 
 import Wonsz.Server.Authentication (Protected, protected, AuthenticatedUser)
 
-data SeasonOverview = SeasonOverview 
+data SeasonOverview = SeasonOverview
     { participants :: [ParticipantOverview]
     } deriving (Show, Eq, Generic)
 
-instance ToJSON SeasonOverview 
-instance FromJSON SeasonOverview 
+instance ToJSON SeasonOverview
+instance FromJSON SeasonOverview
 
 data ParticipantOverview = ParticipantOverview
     { participantName :: !Text
@@ -37,14 +37,14 @@ data ParticipantOverview = ParticipantOverview
     , participantAvatarUrl :: !Text
     } deriving (Show, Eq, Generic)
 
-instance ToJSON ParticipantOverview 
+instance ToJSON ParticipantOverview
 instance FromJSON ParticipantOverview
 
 type SeasonApi auth = "season" :> Protected auth :> SeasonApi'
 
 type SeasonApi' = "overview" :> Get '[JSON] SeasonOverview
 
-seasonApi 
+seasonApi
     :: Monad m
     => MonadError ServerError m
     => AuthResult AuthenticatedUser
@@ -54,11 +54,11 @@ seasonApi = protected $ const overviewHandler
 overviewHandler :: Monad m => m SeasonOverview
 overviewHandler = return $ SeasonOverview participants
     where
-      participants = 
+      participants =
           [ ParticipantOverview "Paweł Machay" 12 1 "/static/makkay.jpg"
           , ParticipantOverview "Hubert Kotlarz" 10 2 "/static/hubert.jpg"
           , ParticipantOverview "Tomasz Batko" 8 3 "/static/btk.jpg"
           , ParticipantOverview "Jakub Dziedzic" 7 4 "/static/kuba.jpg"
           , ParticipantOverview "Paweł Szuro" 6 5 "/static/szuro.jpg"
           , ParticipantOverview "Mateusz Wałach" 3 6 "/static/mateusz.jpg"
-          ] 
+          ]

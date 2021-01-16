@@ -1,4 +1,4 @@
-module Wonsz.Scoreboard 
+module Wonsz.Scoreboard
     (
     ) where
 

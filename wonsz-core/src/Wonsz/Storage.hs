@@ -1,7 +1,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleInstances #-}
 
-module Wonsz.Storage 
+module Wonsz.Storage
     ( KeyValueStorage(..)
     ) where
 

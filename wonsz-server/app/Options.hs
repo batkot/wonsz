@@ -1,4 +1,4 @@
-module Options 
+module Options
     ( getOptions
     , Options
     , optPort
@@ -6,8 +6,8 @@ module Options
     , optAllowedCorsOrigin
     ) where
 
-import Data.Functor.Identity 
-import Options.Applicative 
+import Data.Functor.Identity
+import Options.Applicative
 import System.Environment (lookupEnv)
 import Text.Read (readMaybe)
 import Data.Maybe (isNothing)
@@ -18,13 +18,13 @@ data OptF f = OptF
     { port :: f Int
     , pgConnection :: f String
     , allowedCorsOrigin :: Maybe String
-    } 
+    }
 
-type OptM = OptF Maybe 
+type OptM = OptF Maybe
 type Options = OptF Identity
 
 instance Alternative f => Semigroup (OptF f) where
-  (OptF p1 c1 o1) <> (OptF p2 c2 o2) = 
+  (OptF p1 c1 o1) <> (OptF p2 c2 o2) =
       OptF (p1 <|> p2) (c1 <|> c2) (o1 <|> o2)
 
 optPort :: Options -> Int
@@ -37,8 +37,8 @@ optAllowedCorsOrigin :: Options -> Maybe String
 optAllowedCorsOrigin (OptF _ _ x) = x
 
 cmdLineParser :: Parser OptM
-cmdLineParser = OptF 
-    <$> optional ( option auto 
+cmdLineParser = OptF
+    <$> optional ( option auto
             ( long "port"
             <> short 'p'
             <> metavar "INT"
@@ -55,14 +55,14 @@ cmdLineParser = OptF
             ))
 
 getCmdLineOptions :: IO OptM
-getCmdLineOptions = execParser $ info 
-    (cmdLineParser <**> helper) 
+getCmdLineOptions = execParser $ info
+    (cmdLineParser <**> helper)
     (fullDesc <> progDesc "Runs wonsz server")
 
 getOptions :: IO (Either String Options)
-getOptions = do 
+getOptions = do
     cmdLineArgs <- getCmdLineOptions
-    envVar <- getEnvOpts 
+    envVar <- getEnvOpts
     return $ collapse (cmdLineArgs <> envVar <> defaults)
 
 defaults :: OptM
@@ -70,10 +70,10 @@ defaults = OptF (Just 8080) Nothing Nothing
 
 collapse :: OptM -> Either String Options
 collapse (OptF (Just x) (Just y) z) = Right $ OptF (Identity x) (Identity y) z
-collapse (OptF port pgConnection _) = 
+collapse (OptF port pgConnection _) =
     Left . (<>) "Missing arguments: " . intercalate ", " . fmap snd . filter fst $ params
   where
-    params = 
+    params =
         [ (isNothing port, "Server port")
         , (isNothing pgConnection, "Database connection")
         ]

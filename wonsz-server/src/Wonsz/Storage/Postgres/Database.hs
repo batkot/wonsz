@@ -15,7 +15,7 @@
 
 module Wonsz.Storage.Postgres.Database
     ( initialize
-    , initializePostgresqlPool 
+    , initializePostgresqlPool
 
     , PersistentSqlBackEndT (..)
     , runPostgresBackEndT
@@ -41,7 +41,7 @@ import qualified Database.Persist               as Persist
 import qualified Database.Persist.Sql           as PS
 import qualified Database.Persist.Postgresql    as P
 import qualified Database.Persist.Postgresql.JSON as PJSON
-import Database.Esqueleto as E (from, where_, (^.), (==.), (=.), select, val, update, set, countRows, count, countDistinct, SqlExpr, Value(..)) 
+import Database.Esqueleto as E (from, where_, (^.), (==.), (=.), select, val, update, set, countRows, count, countDistinct, SqlExpr, Value(..))
 import qualified Database.Persist.TH            as PTH
 
 PTH.share [PTH.mkPersist PTH.sqlSettings, PTH.mkMigrate "migrateAll"] [PTH.persistLowerCase|
@@ -53,11 +53,11 @@ PTH.share [PTH.mkPersist PTH.sqlSettings, PTH.mkMigrate "migrateAll"] [PTH.persi
         deriving Show
 |]
 
-initializePostgresqlPool 
+initializePostgresqlPool
     :: MonadUnliftIO m
     => MonadLogger m
     => P.ConnectionString
-    -> Int 
+    -> Int
     -> m P.ConnectionPool
 initializePostgresqlPool connString poolSize = do
     pool <- P.createPostgresqlPool connString poolSize
@@ -69,39 +69,39 @@ initialize = P.runMigration migrateAll >> seedUsers
 
 seedUsers :: MonadIO m => P.SqlPersistT m ()
 seedUsers = do
-    usersCount <- select $ 
+    usersCount <- select $
                 from $ \account -> do
                     where_ $ account ^. AccountLogin ==. val "btk"
                     return (countRows :: SqlExpr (Value Int))
     if sum (unValue <$> usersCount) > 0
        then return ()
-       else void $ P.insert $ Account 1 "btk" "Tomek" "password" 
+       else void $ P.insert $ Account 1 "btk" "Tomek" "password"
 
-newtype PersistentSqlBackEndT m a = PersistentSqlBackEndT 
-    { unPersistentSqlBackEndT :: ReaderT P.ConnectionPool m a } 
+newtype PersistentSqlBackEndT m a = PersistentSqlBackEndT
+    { unPersistentSqlBackEndT :: ReaderT P.ConnectionPool m a }
     deriving newtype (Functor, Applicative, Monad, MonadIO, MonadTrans)
 
 deriving newtype instance MonadError err m => MonadError err (PersistentSqlBackEndT m)
 
-runSql 
-    :: Monad m 
-    => MonadIO m 
+runSql
+    :: Monad m
+    => MonadIO m
     => P.SqlPersistT IO a -> PersistentSqlBackEndT m a
-runSql sql = PersistentSqlBackEndT $ do 
-    pool <- ask 
+runSql sql = PersistentSqlBackEndT $ do
+    pool <- ask
     liftIO $ P.runSqlPool sql pool
 
 runPostgresBackEndT :: P.ConnectionPool -> PersistentSqlBackEndT m a -> m a
-runPostgresBackEndT pool = flip runReaderT pool . unPersistentSqlBackEndT 
+runPostgresBackEndT pool = flip runReaderT pool . unPersistentSqlBackEndT
 
 instance (Monad m, MonadIO m) => UserMonad (PersistentSqlBackEndT m) where
-    getUser userName = do 
+    getUser userName = do
         matchingUser <- listToMaybe <$> runSql (findAccounts userName)
         return $ mapToUser <$> matchingUser
       where
         mapToUser = User
             <$> accountUserId . P.entityVal
-            <*> accountLogin . P.entityVal 
+            <*> accountLogin . P.entityVal
             <*> accountName . P.entityVal
             <*> accountPassword . P.entityVal
 
@@ -116,20 +116,20 @@ instance (Monad m, MonadIO m) => UserMonad (PersistentSqlBackEndT m) where
       where
         mapToUser = User
             <$> accountUserId . P.entityVal
-            <*> accountLogin . P.entityVal 
+            <*> accountLogin . P.entityVal
             <*> accountName . P.entityVal
             <*> accountPassword . P.entityVal
 
 findAccounts :: MonadIO m => Text -> P.SqlPersistT m [P.Entity Account]
-findAccounts userName = 
-    select $ 
+findAccounts userName =
+    select $
         from $ \account -> do
-            where_ (account ^. AccountLogin ==. val userName) 
+            where_ (account ^. AccountLogin ==. val userName)
             return account
 
 findAccountById :: MonadIO m => Int -> P.SqlPersistT m [P.Entity Account]
-findAccountById userId = 
-    select $ 
+findAccountById userId =
+    select $
         from $ \account -> do
-            where_ (account ^. AccountUserId ==. val userId) 
+            where_ (account ^. AccountUserId ==. val userId)
             return account

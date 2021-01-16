@@ -1,7 +1,7 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE OverloadedStrings #-}
 
-module Resources.WonszApp 
+module Resources.WonszApp
     ( withWonszApp
 
     , makeWonszAppResource
@@ -9,8 +9,8 @@ module Resources.WonszApp
     , createApiClient
     , WonszClient(..)
 
-    , validLoginRequest 
-    , invalidLoginRequest 
+    , validLoginRequest
+    , invalidLoginRequest
     ) where
 
 import Data.ByteString.Char8 (pack)
@@ -24,7 +24,7 @@ import Network.Wai.Handler.Warp as Warp
 import Network.HTTP.Client (newManager, defaultManagerSettings)
 
 import Servant (Proxy(..), (:<|>)(..))
-import Servant.Client 
+import Servant.Client
 import Servant.Auth.Server (generateKey, JWT)
 import Servant.Auth.Client
 
@@ -37,7 +37,7 @@ import Wonsz.Users.Domain (User(..))
 import Wonsz.Crypto (CryptoMonad(..))
 
 withWonszApp :: (IO WonszClient -> TestTree) -> TestTree
-withWonszApp tests = 
+withWonszApp tests =
     withResource makeWonszAppResource freeWonszAppResource $ \x ->
         withResource (fst <$> x >>= createApiClient) (const  (return ())) tests
 
@@ -83,11 +83,11 @@ badPassword = "notPassword"
 validLoginRequest :: LoginRequest
 validLoginRequest = LoginRequest userName goodPassword
 
-invalidLoginRequest :: LoginRequest 
+invalidLoginRequest :: LoginRequest
 invalidLoginRequest = LoginRequest userName badPassword
 
-instance Monad m => UserMonad (IdentityT m) where 
-    getUser userName = return . Just $ User 1 userName "" (pack goodPassword) 
+instance Monad m => UserMonad (IdentityT m) where
+    getUser userName = return . Just $ User 1 userName "" (pack goodPassword)
     getById id = return . Just $ User id "" "" (pack goodPassword)
     saveUser = const $ return ()
 

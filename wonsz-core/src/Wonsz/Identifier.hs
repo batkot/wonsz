@@ -3,7 +3,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE DerivingStrategies #-}
 
-module Wonsz.Identifier 
+module Wonsz.Identifier
     ( Id
     , IdGeneratorMonad(..)
     , ConvertableIds(..)

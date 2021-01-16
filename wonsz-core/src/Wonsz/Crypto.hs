@@ -20,7 +20,7 @@ class Monad m => CryptoMonad m where
 
 instance {-# OVERLAPPABLE #-}
     ( CryptoMonad m
-    , MonadTrans t 
+    , MonadTrans t
     , Monad (t m)) => CryptoMonad (t m) where
     hash = lift . hash
 
@@ -31,4 +31,4 @@ newtype PlainTextCryptoT m a = PlainTextCryptoT
 
 
 instance Monad m => CryptoMonad (PlainTextCryptoT m) where
-    hash = return 
+    hash = return

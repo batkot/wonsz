@@ -25,13 +25,13 @@ import Servant.Auth.Server (AuthResult(..), Auth, ThrowAll(..))
 
 import Wonsz.Server.Authentication (Protected, protected, AuthenticatedUser, getAuthenticatedUserId, protected2)
 
-import Wonsz.Users 
+import Wonsz.Users
 import Wonsz.Users.Domain (getUserId, getUserName, getUserLogin) -- tmp
 import Wonsz.Crypto (CryptoMonad)
 
 type AccountApi auth = "account" :> Protected auth :> AccountApi'
 
-type AccountApi' = 
+type AccountApi' =
         Capture "id" Int :> Get '[JSON] AccountDetails
         :<|> "changePassword" :> ReqBody '[JSON] ChangePasswordRequest :> Post '[JSON] ()
 
@@ -40,49 +40,49 @@ data AccountDetails = AccountDetails
     , accountLogin :: !String
     , accountName :: !String
     , accountAvatarUrl :: !String
-    } 
+    }
     deriving stock (Show, Eq, Generic)
     deriving anyclass (FromJSON, ToJSON)
 
-data ChangePasswordRequest = ChangePasswordRequest 
-    { newPassword :: !String 
+data ChangePasswordRequest = ChangePasswordRequest
+    { newPassword :: !String
     , currentPassword :: !String
-    } 
+    }
     deriving stock (Show, Eq, Generic)
     deriving anyclass (FromJSON, ToJSON)
 
 accountApi
-    :: UserMonad m 
+    :: UserMonad m
     => MonadError ServerError m
     => CryptoMonad m
     => AuthResult AuthenticatedUser
-    -> ServerT AccountApi' m 
+    -> ServerT AccountApi' m
 accountApi (Authenticated user) = accountDetailsHandler user :<|> changePasswordHandler user
 accountApi _ = const (throwError err401) :<|> const (throwError err401)
 
 changePasswordHandler
-    :: UserMonad m 
+    :: UserMonad m
     => CryptoMonad m
-    => AuthenticatedUser 
+    => AuthenticatedUser
     -> ChangePasswordRequest
     -> m ()
 changePasswordHandler user ChangePasswordRequest{..} = changePassword command
-  where 
+  where
     userId = getAuthenticatedUserId user
     command = ChangePasswordCommand userId userId (Text.pack newPassword)
 
-accountDetailsHandler 
+accountDetailsHandler
     :: UserMonad m
     => MonadError ServerError m
     => AuthenticatedUser
-    -> Int 
+    -> Int
     -> m AccountDetails
 accountDetailsHandler _ userId = do
     user <- getById userId
     case user of
         Nothing -> throwError err404
-        Just u -> return $ AccountDetails 
-            (getUserId u) 
-            ((Text.unpack . getUserLogin) u) 
+        Just u -> return $ AccountDetails
+            (getUserId u)
+            ((Text.unpack . getUserLogin) u)
             ((Text.unpack . getUserName) u)
             ("/static/" <> (Text.unpack . getUserLogin) u <> ".jpg" )

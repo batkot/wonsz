@@ -26,9 +26,9 @@ newtype KvsUserMonadT m a = KvsUserMonadT { runKvsUserMonadT :: m a }
 
 deriving newtype instance MonadError err m => MonadError err (KvsUserMonadT m)
 
-instance (Monad m, KeyValueStorage m String User) => UserMonad (KvsUserMonadT m) where 
+instance (Monad m, KeyValueStorage m String User) => UserMonad (KvsUserMonadT m) where
     getUser = KvsUserMonadT . get . unpack
-    saveUser user = KvsUserMonadT $ do 
+    saveUser user = KvsUserMonadT $ do
         set ((unpack . _userLogin) user) user
         set ((show . _userId) user) user
-    getById = KvsUserMonadT . get . show 
+    getById = KvsUserMonadT . get . show

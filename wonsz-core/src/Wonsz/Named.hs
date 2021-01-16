@@ -1,8 +1,8 @@
 {-# LANGUAGE PatternSynonyms #-}
 {-# LANGUAGE RankNTypes #-}
 
-module Wonsz.Named 
-    ( Named 
+module Wonsz.Named
+    ( Named
     , unNamed
     , pattern Named
 

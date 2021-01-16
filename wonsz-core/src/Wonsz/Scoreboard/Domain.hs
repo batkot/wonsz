@@ -12,7 +12,7 @@ module Wonsz.Scoreboard.Domain
 import Lens.Micro.Platform (makeLenses, (^.), (<>~), (&), (.~))
 
 import Data.Text (Text)
-import Wonsz.Identifier 
+import Wonsz.Identifier
 
 -- Scoreboard
 -- scorePoint :: Yada yada -> Scoreboard -> Point
@@ -28,7 +28,7 @@ instance ConvertableIds User Participant
 data Participant = Participant
     { _participantId :: !(Id Participant)
     , _participantScore :: !Int
-    } 
+    }
     deriving stock (Eq, Show)
 
 data Scoreboard = Scoreboard
@@ -36,14 +36,14 @@ data Scoreboard = Scoreboard
     , _scoreboardActive :: !Bool
     , _scoreboardParticipants :: ![Participant]
     , _scoreboardId :: !(Id Scoreboard)
-    } 
+    }
     deriving stock (Eq, Show)
 
 makeLenses ''Scoreboard
 
 newScoreboard
     :: IdGeneratorMonad m
-    => Text 
+    => Text
     -> m Scoreboard
 newScoreboard scoreboardName = Scoreboard scoreboardName True [] <$> nextId
 

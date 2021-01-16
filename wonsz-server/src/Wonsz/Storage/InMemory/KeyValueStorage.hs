@@ -22,7 +22,7 @@ import Wonsz.Storage (KeyValueStorage(..))
 
 type InMemKvs a = IORef (HM.HashMap String a)
 
-runInMemoryKvsT 
+runInMemoryKvsT
     :: MonadIO m
     => HM.HashMap String v
     -> InMemoryKvsT v m a
@@ -37,7 +37,7 @@ newtype InMemoryKvsT v m a = InMemoryKvsT { unInMemoryKvsT :: ReaderT (InMemKvs 
 deriving newtype instance MonadError err m => MonadError err (InMemoryKvsT v m)
 
 instance (MonadIO m, Show k) => KeyValueStorage (InMemoryKvsT v m) k v where
-    get key = InMemoryKvsT $ do 
+    get key = InMemoryKvsT $ do
         ioRef <- ask
         map <- liftIO (readIORef ioRef)
         return $ HM.lookup (show key) map
