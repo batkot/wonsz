@@ -33,6 +33,7 @@ import Router.Routes exposing (Route(..))
 
 import Login as L
 import Page.Account as A
+import Page.Dashboard as D
 import Page.NotFound as NF
 
 type alias Page pageModel =
@@ -61,6 +62,7 @@ type PageModel
     = Login (Page L.LoginData)
     | Account (Authorized (Page A.Model))
     | NotFound (Authorized (Page {}))
+    | Dashboard (Authorized (Page {}))
 
 type PageCommand
     = LoginCommand L.LoginCmd
@@ -80,7 +82,7 @@ update command model =
             |> Fx.map (\l -> Login { loginPage | model = l })
 
         (ChangePage newRoute, page) ->
-            if pageRoute page == newRoute
+            if toRoute page == newRoute
             then Fx.pure model
             else dispatchRoute (pageSession page) newRoute
                     |> Fx.mapFx here
@@ -108,6 +110,7 @@ updateSession session page =
         -- Boring dispatch -.-
         (Authenticated auth, Account p) -> Fx.pure <| Account <| updateAuthSession auth p
         (Authenticated auth, NotFound p) -> Fx.pure <| NotFound <| updateAuthSession auth p
+        (Authenticated auth, Dashboard p) -> Fx.pure <| Dashboard <| updateAuthSession auth p
 
 dispatchRoute : Session -> Route -> Fx (CommandFx PageCommand) PageModel
 dispatchRoute session route =
@@ -134,6 +137,13 @@ dispatchRoute session route =
                     })
                 |> Fx.mapFx (CommandFx.map AccountCommand)
 
+        (Authenticated auth, Router.Routes.Dashboard)
+            -> Fx.pure <| Dashboard <|
+                { authSession = auth
+                , title = "Wonsz - Dashboard"
+                , route = route
+                , model = {}
+                }
 
 pageSession : PageModel -> Session
 pageSession page =
@@ -141,13 +151,7 @@ pageSession page =
         (Login _) -> Anonymous
         (Account p) -> getSession p
         (NotFound p) -> getSession p
-
-pageRoute : PageModel -> Route
-pageRoute page =
-    case page of
-        (Login p) -> p.route
-        (Account p) -> p.route
-        (NotFound p) -> p.route
+        (Dashboard p) -> getSession p
 
 toRoute : PageModel -> Route
 toRoute model =
@@ -155,6 +159,7 @@ toRoute model =
         Login p -> p.route
         Account p -> p.route
         NotFound p -> p.route
+        (Dashboard p) -> p.route
 
 requireLogin : Route -> PageModel
 requireLogin redirectTo = Login
@@ -180,6 +185,10 @@ view env model =
             A.view env accountPage.model
             |> Html.map AccountCommand
             |> pageView accountPage.title
+
+        (Dashboard dashboardPage) ->
+            D.view
+            |> pageView dashboardPage.title
 
         (NotFound notFoundPage) ->
             NF.view env

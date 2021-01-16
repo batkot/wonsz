@@ -8,16 +8,17 @@ module Router.Routes exposing
 
 import Url.Builder exposing (relative)
 import Url.Parser as UP exposing ((</>))
-import Url exposing (Url, toString)
+import Url exposing (Url)
 
 type Route
     = NotFound
     | Account Int
+    | Dashboard
 
 routes : UP.Parser (Route -> a) a
 routes = UP.oneOf
     [ UP.map Account (UP.s "account" </> UP.int)
-    , UP.map (Account 1) (UP.s "dupa")
+    , UP.map Dashboard UP.top
     ]
 
 parseUrl : Url -> Route
@@ -36,3 +37,4 @@ toUrl r =
             Account id ->
                 relative ["account", String.fromInt id] []
                 |> buildStringUrl
+            Dashboard -> ""

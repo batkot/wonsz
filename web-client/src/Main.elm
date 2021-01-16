@@ -152,7 +152,10 @@ loggedView d auth subContent =
     let
         header = div
             [ class "header" ]
-            [ img [ src Assets.logo ] []
+            [ a 
+                [ href (RR.toUrl RR.Dashboard)]
+                [ img [ src Assets.logo ] []
+                ]
             , div
                 [ class "logged-user" ]
                 [ a
