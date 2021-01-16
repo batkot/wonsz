@@ -1,4 +1,4 @@
-module Router exposing 
+module Router exposing
     ( Command(..)
     , HasNavKey
 
@@ -6,8 +6,8 @@ module Router exposing
     )
 
 import Browser exposing (UrlRequest(..))
-import Browser.Navigation as Nav exposing (Key) 
-import Url 
+import Browser.Navigation as Nav exposing (Key)
+import Url
 
 type alias HasNavKey a = { a | navKey : Key }
 
@@ -16,12 +16,12 @@ type Command = RouteRequested UrlRequest
 -- High level api
 handleRouting : HasNavKey a -> Command -> Cmd cmd
 handleRouting { navKey } (RouteRequested request) =
-    case request of 
-        Internal url -> 
+    case request of
+        Internal url ->
             Url.toString url
-            |> Nav.pushUrl navKey 
+            |> Nav.pushUrl navKey
 
-        External url -> 
+        External url ->
             Nav.load url
 
 

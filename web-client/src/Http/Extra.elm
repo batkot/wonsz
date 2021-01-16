@@ -21,7 +21,7 @@ type alias HasBaseUrl a = { a | baseUrl : Url }
 
 type HttpRequest a = HttpRequest (RequestConfig a)
 
-type HttpMethod 
+type HttpMethod
     = Get
     | Put
     | Post
@@ -42,7 +42,7 @@ unUrl : Url -> String
 unUrl (Url x) = x
 
 httpMethodToString : HttpMethod -> String
-httpMethodToString m = 
+httpMethodToString m =
     case m of
         Get -> "GET"
         Put -> "PUT"
@@ -50,8 +50,8 @@ httpMethodToString m =
         Delete -> "DELETE"
 
 execute : Url -> HttpRequest a -> Cmd (Result Http.Error a)
-execute (Url baseUrl) (HttpRequest req) = 
-    Http.request 
+execute (Url baseUrl) (HttpRequest req) =
+    Http.request
         { method = httpMethodToString req.method
         , url = baseUrl ++ unUrl req.url
         , headers = req.headers
@@ -70,15 +70,15 @@ type alias RequestConfig a =
     }
 
 addHeader : Http.Header -> HttpRequest a -> HttpRequest a
-addHeader header (HttpRequest req) = HttpRequest 
+addHeader header (HttpRequest req) = HttpRequest
     { req | headers = List.append req.headers [header] }
 
 mapRequest : (a -> b) -> HttpRequest a -> HttpRequest b
-mapRequest f (HttpRequest req) = 
+mapRequest f (HttpRequest req) =
     let mappedDecoder = JD.map f req.responseDecoder
         request = makeRequest req.url req.method mappedDecoder req.body
     in List.foldl addHeader request req.headers
 
 makeRequest : Url -> HttpMethod -> JD.Decoder a -> Http.Body -> HttpRequest a
 makeRequest url method decoder body = RequestConfig url method decoder body []
-    |> HttpRequest 
+    |> HttpRequest

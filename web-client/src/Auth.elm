@@ -66,7 +66,7 @@ userId : UserDescription -> Int
 userId (UserDescription u) = u.id
 
 userDescriptionDecoder : JD.Decoder UserDescription
-userDescriptionDecoder = 
+userDescriptionDecoder =
     JD.succeed UserData
     |> JDP.required "auId" JD.int
     |> JDP.required "name" JD.string
@@ -77,21 +77,21 @@ authTokenStorageKey = "AuthToken"
 
 -- Token lifecycle management
 authenticate : TokenString -> Maybe (AuthSession, Cmd a)
-authenticate token = 
+authenticate token =
     parseToken token
     |> Maybe.map (\session -> (session, LS.storeString authTokenStorageKey token))
 
 logout : Requires AuthSession (Cmd a)
 logout = always <| LS.clearKey authTokenStorageKey
 
--- Http Authorize 
+-- Http Authorize
 type alias Requires auth res = auth -> res
 
 authorize : HE.HttpRequest a -> Requires AuthSession (HE.HttpRequest a)
-authorize req auth = 
+authorize req auth =
     let authHeader = createAuthHeader auth
     in HE.addHeader authHeader req
 
 createAuthHeader : AuthSession -> Http.Header
 createAuthHeader (AuthSession session) = "Bearer " ++ unwrapToken session.authToken
-    |> Http.header "Authorization" 
+    |> Http.header "Authorization"

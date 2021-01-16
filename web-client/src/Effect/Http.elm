@@ -13,8 +13,8 @@ type HttpFx msg
     = Request (HE.HttpRequest msg) (Http.Error -> msg)
 
 runHttpFx : HE.Url -> HttpFx msg -> Cmd msg
-runHttpFx baseUrl (Request request f) = 
-    HE.execute baseUrl request 
+runHttpFx baseUrl (Request request f) =
+    HE.execute baseUrl request
     |> Cmd.map (RE.unpack f identity)
 
 map : (a -> b) -> HttpFx a -> HttpFx b

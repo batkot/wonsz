@@ -14,7 +14,7 @@ module Effect.Compose exposing
 
 import Effect as Fx exposing (Fx)
 
-type FxComp a b 
+type FxComp a b
     = L a
     | R b
 
@@ -25,13 +25,13 @@ here : a -> FxComp a b
 here = L
 
 runFxComp : (a -> Cmd msg) -> (b -> Cmd msg) -> FxComp a b -> Cmd msg
-runFxComp f g comp = 
+runFxComp f g comp =
     case comp of
         L a -> f a
         R b -> g b
 
 bimap : (a -> c) -> (b -> d) -> FxComp a b -> FxComp c d
-bimap f g comp = 
+bimap f g comp =
     case comp of
         L x -> L (f x)
         R y -> R (g y)
@@ -43,7 +43,7 @@ mapRight : (a -> b) -> FxComp x a -> FxComp x b
 mapRight = bimap identity
 
 pushRight : effR -> Fx effL a -> Fx (FxComp effL effR) a
-pushRight fx eff = 
+pushRight fx eff =
     Fx.mapFx here eff
     |> Fx.push (next fx)
 

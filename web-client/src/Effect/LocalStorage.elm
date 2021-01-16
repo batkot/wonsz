@@ -5,8 +5,8 @@ module Effect.LocalStorage exposing
 
 import IO.LocalStorage as LS
 
-type LocalStorageFx 
-    = Store String String 
+type LocalStorageFx
+    = Store String String
     | Clear String
 
 runLocalStorageFx : LocalStorageFx -> Cmd msg

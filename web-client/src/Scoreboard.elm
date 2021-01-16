@@ -1,16 +1,16 @@
-module Scoreboard exposing 
+module Scoreboard exposing
     ( Command
     , initCommand
     , Model
     , initModel
-    -- , update 
+    -- , update
     , view
     )
 
 import Html exposing (Html, div, text, img)
 import Html.Attributes exposing (class, src)
 
-import Html.Extra as HE 
+import Html.Extra as HE
 import Result.Extra as RE
 
 import Http.Extra exposing (HasBaseUrl, Url(..))
@@ -38,9 +38,9 @@ initModel : SeasonOverview
 initModel = SeasonOverview []
 
 -- update : AuthSession -> Command -> Model -> Fx.Eff ScoreboardFx Model
--- update auth cmd m = 
+-- update auth cmd m =
 --     case cmd of
---         Init -> 
+--         Init ->
 --             let httpFx = Fx.Request (getSeasonOverview auth) (RE.unpack (always SeasonOverviewFailure) GotSeasonOverview)
 --             in Fx.pure m
 --                 |> Fx.addFx httpFx
@@ -52,7 +52,7 @@ initModel = SeasonOverview []
 --             Fx.pure m
 
 view : HasBaseUrl (HasDict x) -> Model -> Html a
-view { baseUrl, dict} season = 
+view { baseUrl, dict} season =
     let p = season.participants
         leader = List.head p
             |> Maybe.map (participantView baseUrl dict)
@@ -67,10 +67,10 @@ view { baseUrl, dict} season =
             |> List.map (participantView baseUrl dict)
     in div
         [ class "scoreboard" ]
-        [ div 
+        [ div
             [ class "leader" ]
             [ leader ]
-        , div 
+        , div
             [ class "rest" ]
             podium
         , div
@@ -79,16 +79,16 @@ view { baseUrl, dict} season =
         ]
 
 placeView : Int -> Html a
-placeView place = 
+placeView place =
     div [ class "place", class (placeClass place) ] [ text (String.fromInt place) ]
 
 placeClass : Int -> String
-placeClass place = 
+placeClass place =
     let placeString = if place < 4 then String.fromInt place else "n"
     in "place-" ++ placeString
 
 participantView : Url -> Dict -> SeasonParticipant -> Html a
-participantView  (Url url) dict participant = 
+participantView  (Url url) dict participant =
         div [ class "player", class (placeClass participant.place) ]
             [ img [ src (url ++ participant.avatarUrl) ] []
             , placeView participant.place

@@ -19,4 +19,4 @@ type alias Dict =
     , pointLabel : String
     }
 
-type alias HasDict a = { a | dict : Dict } 
+type alias HasDict a = { a | dict : Dict }

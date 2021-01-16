@@ -1,4 +1,4 @@
-module IO.Api exposing 
+module IO.Api exposing
     ( login
     , renewToken
 
@@ -28,7 +28,7 @@ type alias Password = String
 type alias Authorized res = Requires AuthSession (HttpRequest res)
 
 login : Username -> Password -> HttpRequest AuthTokenString
-login username password = 
+login username password =
     let loginBody = JE.object
             [ ("username", JE.string username)
             , ("password", JE.string password)]
@@ -36,7 +36,7 @@ login username password =
     in makeRequest (Url "/auth/login") Post JD.string loginBody
 
 renewToken : Authorized AuthTokenString
-renewToken = 
+renewToken =
     makeRequest (Url "/auth/renewToken") Post JD.string emptyBody
     |> authorize
 
@@ -52,12 +52,12 @@ type alias SeasonParticipant =
     }
 
 seasonOverviewDecoder : JD.Decoder SeasonOverview
-seasonOverviewDecoder = 
+seasonOverviewDecoder =
     JD.succeed SeasonOverview
     |> JDP.required "participants" (JD.list seasonParticipantDecoder)
 
 seasonParticipantDecoder : JD.Decoder SeasonParticipant
-seasonParticipantDecoder = 
+seasonParticipantDecoder =
     JD.succeed SeasonParticipant
     |> JDP.required "participantName" JD.string
     |> JDP.required "participantScore" JD.int
@@ -65,7 +65,7 @@ seasonParticipantDecoder =
     |> JDP.required "participantAvatarUrl" JD.string
 
 getSeasonOverview : Authorized SeasonOverview
-getSeasonOverview = 
+getSeasonOverview =
     makeRequest (Url "/api/season/overview") Get seasonOverviewDecoder emptyBody
     |> authorize
 
@@ -90,13 +90,13 @@ getAccountDetails accountId =
     in makeRequest url Get accountDetailsDecoder emptyBody
         |> authorize
 
-type alias ChangePasswordRequest = 
+type alias ChangePasswordRequest =
     { newPassword : String
     , currentPassword : String
     }
 
 changePassword : ChangePasswordRequest -> Authorized {}
-changePassword request = 
+changePassword request =
     let requestBody = JE.object
             [ ("newPassword", JE.string request.newPassword)
             , ("currentPassword", JE.string request.currentPassword)]

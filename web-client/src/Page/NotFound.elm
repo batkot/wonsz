@@ -7,9 +7,9 @@ import Assets exposing (notFound)
 import Lang exposing (Dict, HasDict)
 
 view : HasDict a -> Html cmd
-view { dict } = 
+view { dict } =
     div []
-        [ div 
+        [ div
             [ class "not-found" ]
             [ img [ src notFound ] [] ]
         , text dict.notFoundMessage

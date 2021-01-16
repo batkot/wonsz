@@ -24,37 +24,37 @@ import Auth exposing (AuthSession)
 import Session exposing (Session(..))
 
 import Effect as Fx exposing (Fx)
-import Effect.Http as HttpFx exposing (HttpFx(..)) 
+import Effect.Http as HttpFx exposing (HttpFx(..))
 import Effect.Command as CommandFx exposing (CommandFx(..))
 import Effect.AuthenticationToken exposing (AuthenticationTokenFx)
 import Effect.Compose exposing (FxComp, mapLeft, here, next)
 
 import Router.Routes exposing (Route(..))
 
-import Login as L 
+import Login as L
 import Page.Account as A
 import Page.NotFound as NF
 
-type alias Page pageModel = 
-    { title : String 
-    , model : pageModel 
+type alias Page pageModel =
+    { title : String
+    , model : pageModel
     , route : Route }
 
 type alias Authorized a = { a | authSession : AuthSession }
 
-type alias PageView cmd = 
+type alias PageView cmd =
     { title : String
-    , html : Html cmd 
+    , html : Html cmd
     }
 
 pageViewMap : (a -> b) -> PageView a -> PageView b
-pageViewMap f { title, html } = 
+pageViewMap f { title, html } =
     { title = title
     , html = Html.map f html
     }
 
-type alias PageFx = 
-    FxComp (CommandFx PageCommand) 
+type alias PageFx =
+    FxComp (CommandFx PageCommand)
     (FxComp (HttpFx PageCommand) (AuthenticationTokenFx String))
 
 type PageModel
@@ -71,16 +71,16 @@ requestPage : Route -> PageCommand
 requestPage = ChangePage
 
 update : PageCommand -> PageModel -> Fx PageFx PageModel
-update command model = 
+update command model =
     case (command, model) of
-        (LoginCommand cmd, Login loginPage) -> 
+        (LoginCommand cmd, Login loginPage) ->
             L.update cmd loginPage.model
             |> Fx.mapFx (mapLeft (HttpFx.map LoginCommand))
             |> Fx.mapFx next
             |> Fx.map (\l -> Login { loginPage | model = l })
 
         (ChangePage newRoute, page) ->
-            if pageRoute page == newRoute 
+            if pageRoute page == newRoute
             then Fx.pure model
             else dispatchRoute (pageSession page) newRoute
                     |> Fx.mapFx here
@@ -94,15 +94,15 @@ update command model =
         (_, _) -> Fx.pure model
 
 updateSession : Session -> PageModel -> Fx (CommandFx PageCommand) PageModel
-updateSession session page = 
-    case (session, page) of 
-        (Anonymous, Login x) 
+updateSession session page =
+    case (session, page) of
+        (Anonymous, Login x)
             -> Fx.pure <| Login x
-        (Anonymous, p) 
+        (Anonymous, p)
             -> toRoute p
                 |> requireLogin
-                |> Fx.pure 
-        (Authenticated _, Login l) 
+                |> Fx.pure
+        (Authenticated _, Login l)
             -> dispatchRoute session l.route
 
         -- Boring dispatch -.-
@@ -111,8 +111,8 @@ updateSession session page =
 
 dispatchRoute : Session -> Route -> Fx (CommandFx PageCommand) PageModel
 dispatchRoute session route =
-    case (session, route) of 
-        (Anonymous, r) 
+    case (session, route) of
+        (Anonymous, r)
             -> requireLogin r
                 |> Fx.pure
 
@@ -124,7 +124,7 @@ dispatchRoute session route =
                 , model = {}
                 }
 
-        (Authenticated auth, Router.Routes.Account accountId) 
+        (Authenticated auth, Router.Routes.Account accountId)
             -> A.init accountId
                 |> Fx.map (\model -> Account
                     { authSession = auth
@@ -136,8 +136,8 @@ dispatchRoute session route =
 
 
 pageSession : PageModel -> Session
-pageSession page = 
-    case page of 
+pageSession page =
+    case page of
         (Login _) -> Anonymous
         (Account p) -> getSession p
         (NotFound p) -> getSession p
@@ -151,14 +151,14 @@ pageRoute page =
 
 toRoute : PageModel -> Route
 toRoute model =
-    case model of 
+    case model of
         Login p -> p.route
         Account p -> p.route
         NotFound p -> p.route
 
 requireLogin : Route -> PageModel
-requireLogin redirectTo = Login 
-    { title = "Wonsz - login" 
+requireLogin redirectTo = Login
+    { title = "Wonsz - login"
     , route = redirectTo
     , model = L.emptyModel redirectTo }
 
@@ -169,9 +169,9 @@ getSession : Authorized a -> Session
 getSession { authSession } = Authenticated authSession
 
 view : HasBaseUrl (HasDict a) -> PageModel -> PageView PageCommand
-view env model = 
-    case model of 
-        (Login loginPage) -> 
+view env model =
+    case model of
+        (Login loginPage) ->
             L.view env loginPage.model
             |> Html.map LoginCommand
             |> pageView loginPage.title
@@ -183,10 +183,10 @@ view env model =
 
         (NotFound notFoundPage) ->
             NF.view env
-            |> pageView notFoundPage.title 
+            |> pageView notFoundPage.title
 
 pageView : String -> Html a -> PageView a
-pageView title html = 
+pageView title html =
     { title = title
     , html = html
     }

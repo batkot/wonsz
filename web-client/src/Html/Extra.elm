@@ -10,7 +10,7 @@ module Html.Extra exposing
     , spinner
     )
 
-import Assets 
+import Assets
 
 import Html exposing (Html, Attribute, img)
 import Html.Attributes exposing (src, class)
@@ -30,7 +30,7 @@ keyCodeToString : KeyCode -> String
 keyCodeToString (KeyCode k) = "KeyCode: " ++ String.fromInt k
 
 onKeyDown : (KeyCode -> msg) -> Attribute msg
-onKeyDown f = 
+onKeyDown f =
     onKeyDownInternal (\k -> JD.succeed (f k))
 
 onKey : KeyCode -> msg -> Attribute msg
@@ -41,14 +41,14 @@ onKey key msg =
     in onKeyDownInternal matchKey
 
 onKeyDownInternal : (KeyCode -> JD.Decoder msg) -> Attribute msg
-onKeyDownInternal f = 
+onKeyDownInternal f =
     on "keydown" (JD.andThen (KeyCode >> f) keyCode)
 
 empty : Html a
 empty = Html.text ""
 
 spinner : Html a
-spinner = 
-    img [ class "spinner" 
+spinner =
+    img [ class "spinner"
         , src Assets.singleSnake ]
         []

@@ -1,4 +1,4 @@
-port module IO.LocalStorage exposing 
+port module IO.LocalStorage exposing
     ( store
     , storeString
     , setLocalStorageKey
@@ -32,9 +32,9 @@ clearKey = dropLocalStorageKey
 port storageKeyChanged : ((String, JE.Value) -> msg) -> Sub msg
 
 listenStorageKeyChange : JD.Decoder a -> Key -> Sub (Maybe a)
-listenStorageKeyChange decoder key = 
-    let match (k, json) = 
-            if k == key then 
+listenStorageKeyChange decoder key =
+    let match (k, json) =
+            if k == key then
                 case JD.decodeValue decoder json of
                     Ok cmd -> Just cmd
                     Err _ -> Nothing

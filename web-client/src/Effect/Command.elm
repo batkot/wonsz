@@ -19,7 +19,7 @@ map f cmd =
         Delay x t -> Delay (f x) t
 
 runCommandFx : CommandFx msg -> Cmd msg
-runCommandFx eff = 
-    case eff of 
+runCommandFx eff =
+    case eff of
         Raise msg -> CE.pure msg
         Delay msg minutes -> D.after minutes D.Minute msg

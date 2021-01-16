@@ -21,13 +21,13 @@ map : (a -> b) -> Fx eff a -> Fx eff b
 map f (Fx fx x) = Fx fx <| f x
 
 pure : x -> Fx eff x
-pure = Fx [] 
+pure = Fx []
 
 op : Fx eff (a -> b) -> Fx eff a -> Fx eff b
 op (Fx fx1 f) (Fx fx2 x) = Fx (fx1 ++ fx2) <| f x
 
 bind : Fx eff a -> (a -> Fx eff b) -> Fx eff b
-bind (Fx fx1 a) f = 
+bind (Fx fx1 a) f =
     let (Fx fx2 b) = f a
     in Fx (fx1 ++ fx2) b
 
@@ -41,7 +41,7 @@ runFx run (Fx effects value) =
 
 addFx : eff -> a -> Fx eff a
 addFx fx a = pure a
-    |> push fx 
+    |> push fx
 
 just : eff -> Fx eff ()
 just fx = Fx [fx] ()

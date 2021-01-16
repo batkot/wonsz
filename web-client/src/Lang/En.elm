@@ -3,7 +3,7 @@ module Lang.En exposing (dictionary)
 import Lang exposing (Dict)
 
 dictionary : Dict
-dictionary = 
+dictionary =
     { loginPlaceholder = "Username"
     , passwordPlaceholder = "Password"
     , loginAction = "Sign in"

@@ -1,4 +1,4 @@
-module Session exposing 
+module Session exposing
     ( Session(..)
     , SessionSettings
     , HasSessionSettings
@@ -23,14 +23,14 @@ import Effect.Http exposing (HttpFx(..))
 import Effect.LocalStorage exposing (LocalStorageFx(..))
 import Effect.Compose as Fx exposing (FxComp, next)
 
-type Session 
+type Session
     = Anonymous
     | Authenticated AuthSession
 
-type Command 
+type Command
     = ValidateToken TokenString
-    | RenewToken 
-    | Logout  
+    | RenewToken
+    | Logout
 
 type alias SessionSettings =
     { cacheKey : String
@@ -39,17 +39,17 @@ type alias SessionSettings =
     , sessionRefresh : Float
     }
 
-type alias HasSessionSettings a = { a | sessionSettings : SessionSettings } 
+type alias HasSessionSettings a = { a | sessionSettings : SessionSettings }
 
 update : HasSessionSettings (HasBaseUrl a) -> Command -> Session -> (Session, Cmd Command)
 update { baseUrl, sessionSettings } command session =
     case (command, session) of
-        (ValidateToken token, _) -> 
+        (ValidateToken token, _) ->
             authenticateToken sessionSettings token
 
         (_, Anonymous) -> (session, Cmd.none)
 
-        (RenewToken, (Authenticated auth)) -> 
+        (RenewToken, (Authenticated auth)) ->
             let renewRequest = Api.renewToken auth
                     |> HE.execute baseUrl
                     |> Cmd.map (RE.unpack (always Logout) ValidateToken)
@@ -58,7 +58,7 @@ update { baseUrl, sessionSettings } command session =
         (Logout, (Authenticated _)) -> (Anonymous, LS.clearKey sessionSettings.cacheKey)
 
 authenticateToken : SessionSettings -> TokenString -> (Session, Cmd Command)
-authenticateToken settings token = 
+authenticateToken settings token =
     let fx = Cmd.batch
             [ LS.storeString settings.cacheKey token
             , D.after settings.sessionRefresh D.Minute RenewToken
@@ -70,14 +70,14 @@ authenticateToken settings token =
 
 type alias SessionFx = FxComp (CommandFx Command) (FxComp LocalStorageFx (HttpFx Command))
 
-updateFx 
-    : HasSessionSettings a 
-    -> Command 
-    -> Session 
+updateFx
+    : HasSessionSettings a
+    -> Command
+    -> Session
     -> Fx SessionFx Session
 updateFx { sessionSettings } command session =
     case (command, session) of
-        (ValidateToken token, _) -> 
+        (ValidateToken token, _) ->
             let cmdFx = Delay RenewToken sessionSettings.sessionRefresh
                 lsFx = Store sessionSettings.cacheKey token
             in Auth.parseToken token
@@ -89,13 +89,13 @@ updateFx { sessionSettings } command session =
 
         (_, Anonymous) -> Fx.pure session
 
-        (RenewToken, Authenticated auth) -> 
+        (RenewToken, Authenticated auth) ->
             let apiRequest = Api.renewToken auth |> HE.mapRequest ValidateToken
                 httpFx = Request apiRequest (always Logout)
             in Fx.pure session
                 |> Fx.push ((next >> next) httpFx)
 
-        (Logout, Authenticated _) -> 
+        (Logout, Authenticated _) ->
             Fx.pure Anonymous
             |> Fx.pushLeft (Clear sessionSettings.cacheKey)
             |> Fx.mapFx next
