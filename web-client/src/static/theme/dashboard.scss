@@ -1,0 +1,15 @@
+@import "colors.scss";
+
+.dashboard {
+
+    .title {
+        text-transform: uppercase;
+        font-size: 1.3rem;
+        font-weight: bold;
+        text-align: center;
+    }
+
+    .errored {
+        height: 100px;
+    }
+}

@@ -2,8 +2,9 @@
     width: 100%;
     text-align: center;
 
-    img {
-        width: 100%;
-        max-width: 420px;
-    }
+     img {
+         width: 100%;
+         max-width: 200px; 
+         filter: invert(100%);
+     }
 }

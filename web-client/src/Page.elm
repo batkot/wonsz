@@ -61,12 +61,13 @@ type alias PageFx =
 type PageModel
     = Login (Page L.LoginData)
     | Account (Authorized (Page A.Model))
+    | Dashboard (Authorized (Page D.Model))
     | NotFound (Authorized (Page {}))
-    | Dashboard (Authorized (Page {}))
 
 type PageCommand
     = LoginCommand L.LoginCmd
     | AccountCommand A.Command
+    | DashboardCommand D.Command
     | ChangePage Route
 
 requestPage : Route -> PageCommand
@@ -92,6 +93,12 @@ update command model =
                 |> Fx.mapFx (HttpFx.map AccountCommand)
                 |> Fx.mapFx (here >> next)
                 |> Fx.map (\a -> Account { accountPage | model = a})
+
+        (DashboardCommand cmd, Dashboard dashboardPage) ->
+                D.update dashboardPage.authSession cmd dashboardPage.model
+                |> Fx.mapFx (HttpFx.map DashboardCommand)
+                |> Fx.mapFx (here >> next)
+                |> Fx.map (\d -> Dashboard { dashboardPage | model = d})
 
         (_, _) -> Fx.pure model
 
@@ -138,12 +145,14 @@ dispatchRoute session route =
                 |> Fx.mapFx (CommandFx.map AccountCommand)
 
         (Authenticated auth, Router.Routes.Dashboard)
-            -> Fx.pure <| Dashboard <|
-                { authSession = auth
-                , title = "Wonsz - Dashboard"
-                , route = route
-                , model = {}
-                }
+            -> D.init (Auth.user auth)
+                |> Fx.map (\model -> Dashboard
+                    { authSession = auth
+                    , title = "Wonsz - Dashboard"
+                    , route = route
+                    , model = model
+                    })
+                |> Fx.mapFx (CommandFx.map DashboardCommand)
 
 pageSession : PageModel -> Session
 pageSession page =
@@ -187,7 +196,7 @@ view env model =
             |> pageView accountPage.title
 
         (Dashboard dashboardPage) ->
-            D.view
+            D.view env dashboardPage.model
             |> pageView dashboardPage.title
 
         (NotFound notFoundPage) ->

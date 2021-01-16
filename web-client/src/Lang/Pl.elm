@@ -14,10 +14,13 @@ dictionary =
     , notFoundMessage = "Nie znaleziono"
     , confirmLabel = "Ok"
     , denyLabel = "Anuluj"
+    , loadErrorMessage = "Nie można załadować"
 
     , changePasswordAction = "Zmień hasło"
     , currentPasswordPlaceholder  = "Aktualne hasło"
     , newPasswordPlaceholder = "Nowe hasło"
 
     , pointLabel = "pkt."
+
+    , dashboardTitle = "Tabele"
     }

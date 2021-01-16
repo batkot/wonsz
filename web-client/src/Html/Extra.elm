@@ -8,11 +8,16 @@ module Html.Extra exposing
 
     , empty
     , spinner
+    , errorIcon
+    , questionIcon
+
+    , exclamationMessage
+    , questionMessage
     )
 
 import Assets
 
-import Html exposing (Html, Attribute, img)
+import Html exposing (Html, Attribute, img, div, text)
 import Html.Attributes exposing (src, class)
 import Html.Events exposing (keyCode, on)
 
@@ -52,3 +57,34 @@ spinner =
     img [ class "spinner"
         , src Assets.singleSnake ]
         []
+
+errorIcon : Html a
+errorIcon =
+    img [ class "error-icon icon"
+        , src Assets.exclamation
+        ]
+        []
+
+questionIcon : Html a
+questionIcon =
+    img [ class "question-icon icon"
+        , src Assets.question
+        ]
+        []
+
+messageBox : Html a -> String -> Html a
+messageBox icon message = 
+    div [ class "messagebox" ]
+        [ div 
+            [ class "icon-container" ]
+            [ icon ]
+        , div 
+            [ class "message-container" ]
+            [ text message ]
+        ]
+
+exclamationMessage : String -> Html a
+exclamationMessage = messageBox errorIcon
+
+questionMessage : String -> Html a
+questionMessage = messageBox questionIcon

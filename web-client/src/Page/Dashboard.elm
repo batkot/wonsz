@@ -1,8 +1,68 @@
 module Page.Dashboard exposing 
-    ( view
+    ( init
+    , Model
+
+    , Command
+    , update
+
+    , view
     )
 
 import Html exposing (Html, div, text)
+import Html.Attributes exposing (class)
 
-view : Html a
-view = div [] [ text "Dashboard" ]
+import Http.Extra as HE exposing (HasBaseUrl)
+import Html.Extra exposing (spinner, exclamationMessage)
+import Lang exposing (HasDict)
+import Auth exposing (UserDescription, AuthSession)
+
+import Effect as Fx exposing (Fx)
+import Effect.Http exposing (HttpFx(..))
+import Effect.Command exposing (CommandFx(..))
+
+import IO.Api exposing (getScoreboardSummary, ScoreboardSummary)
+
+import Scoreboard exposing (view)
+
+type Command 
+    = LoadDashboard Int
+    | GotScoreboardSummary (List ScoreboardSummary)
+    | GotError 
+
+type Model 
+    = LoadingDashboard Int
+    | Error 
+
+init : UserDescription -> Fx (CommandFx Command) Model
+init user = 
+    let userId = Auth.userId user
+    in LoadingDashboard userId
+        |> Fx.addFx (Raise (LoadDashboard userId))
+
+update : AuthSession -> Command -> Model -> Fx (HttpFx Command) Model
+update auth cmd model =
+    case cmd of 
+        LoadDashboard accountId -> 
+            let apiCall = getScoreboardSummary accountId auth
+                            |> HE.mapRequest GotScoreboardSummary
+                httpFx = Request apiCall (always GotError)
+            in LoadingDashboard accountId 
+                |> Fx.addFx httpFx
+
+        GotScoreboardSummary _ -> Fx.pure model
+        GotError -> Fx.pure Error
+
+view : HasBaseUrl (HasDict a) -> Model -> Html cmd
+view env model = 
+    div [ class "dashboard" ] 
+        [ div 
+            [ class "title" ]
+            [ text <| env.dict.dashboardTitle ]
+        , foo env model
+        ]
+
+foo : HasDict a -> Model -> Html cmd
+foo { dict } model =
+    case model of 
+        LoadingDashboard _ -> spinner
+        Error -> exclamationMessage dict.loadErrorMessage

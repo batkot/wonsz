@@ -11,6 +11,9 @@ module IO.Api exposing
 
     , ChangePasswordRequest
     , changePassword
+
+    , ScoreboardSummary
+    , getScoreboardSummary
     )
 
 import Http exposing (jsonBody, emptyBody)
@@ -20,6 +23,8 @@ import Auth exposing (authorize, Requires, AuthSession)
 import Json.Encode as JE
 import Json.Decode as JD
 import Json.Decode.Pipeline as JDP
+
+import Url.Builder as UB
 
 type alias AuthTokenString = String
 type alias Username = String
@@ -102,4 +107,27 @@ changePassword request =
             , ("currentPassword", JE.string request.currentPassword)]
             |> jsonBody
     in makeRequest (Url "/api/account/changePassword") Post (JD.succeed {}) requestBody
+        |> authorize
+
+type alias ScoreboardSummary =
+    { id : Int
+    , name : String
+    , participantsCount : Int
+    , leader : AccountDetails
+    }
+
+scoreboardSummaryDecoder : JD.Decoder ScoreboardSummary
+scoreboardSummaryDecoder = 
+    JD.succeed ScoreboardSummary
+    |> JDP.required "id" JD.int
+    |> JDP.required "name" JD.string
+    |> JDP.required "participantsCount" JD.int
+    |> JDP.required "leader" accountDetailsDecoder
+
+type alias AccountId = Int
+
+getScoreboardSummary : AccountId -> Authorized (List ScoreboardSummary)
+getScoreboardSummary accountId = 
+    let url = UB.absolute [ "api", "dashboard", String.fromInt accountId ] [] |> Url
+    in makeRequest url Get (JD.list scoreboardSummaryDecoder) emptyBody
         |> authorize

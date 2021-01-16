@@ -11,12 +11,15 @@ type alias Dict =
     , notFoundMessage : String
     , confirmLabel : String
     , denyLabel : String
+    , loadErrorMessage : String
 
     , changePasswordAction : String
     , currentPasswordPlaceholder : String
     , newPasswordPlaceholder : String
 
     , pointLabel : String
+
+    , dashboardTitle : String
     }
 
 type alias HasDict a = { a | dict : Dict }

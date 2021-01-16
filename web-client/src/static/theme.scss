@@ -2,6 +2,7 @@
 @import "theme/login.scss";
 @import "theme/scoreboard.scss";
 @import "theme/account.scss";
+@import "theme/dashboard.scss";
 @import "theme/not-found.scss";
 
 ::placeholder {
@@ -23,6 +24,29 @@ body {
 .spinner {
     animation: spin 2s infinite linear;
     filter: invert(100%);
+}
+
+.messagebox {
+    height: 100px;
+
+    .icon-container {
+        height: 100%;
+        display: inline-block;
+    }
+
+    .message-container {
+        padding: 0 20px;
+        font-size: 1.3rem;
+        height: 100%;
+        text-align: center;
+        display: inline-block;
+        vertical-align: middle;
+    }
+}
+
+.icon {
+    filter: invert(100%);
+    height: 100%;
 }
 
 @-moz-keyframes spin {

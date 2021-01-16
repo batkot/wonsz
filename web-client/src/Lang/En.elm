@@ -14,10 +14,13 @@ dictionary =
     , notFoundMessage = "Not found"
     , confirmLabel = "Ok"
     , denyLabel = "Cancel"
+    , loadErrorMessage = "Can't load"
 
     , changePasswordAction = "Change password"
     , currentPasswordPlaceholder  = "Current password"
     , newPasswordPlaceholder = "New password"
 
     , pointLabel = "pt"
+
+    , dashboardTitle = "Scoreboards"
     }
