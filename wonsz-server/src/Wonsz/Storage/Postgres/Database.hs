@@ -41,7 +41,7 @@ import qualified Database.Persist               as Persist
 import qualified Database.Persist.Sql           as PS
 import qualified Database.Persist.Postgresql    as P
 import qualified Database.Persist.Postgresql.JSON as PJSON
-import Database.Esqueleto as E (from, where_, (^.), (==.), (=.), select, val, update, set, countRows, count, countDistinct, SqlExpr, Value) 
+import Database.Esqueleto as E (from, where_, (^.), (==.), (=.), select, val, update, set, countRows, count, countDistinct, SqlExpr, Value(..)) 
 import qualified Database.Persist.TH            as PTH
 
 PTH.share [PTH.mkPersist PTH.sqlSettings, PTH.mkMigrate "migrateAll"] [PTH.persistLowerCase|
@@ -69,11 +69,11 @@ initialize = P.runMigration migrateAll >> seedUsers
 
 seedUsers :: MonadIO m => P.SqlPersistT m ()
 seedUsers = do
-    users <- select $ 
+    usersCount <- select $ 
                 from $ \account -> do
                     where_ $ account ^. AccountLogin ==. val "btk"
                     return (countRows :: SqlExpr (Value Int))
-    if not (null users)
+    if sum (unValue <$> usersCount) > 0
        then return ()
        else void $ P.insert $ Account 1 "btk" "Tomek" "password" 
 
