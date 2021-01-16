@@ -1,6 +1,7 @@
 module Auth exposing
     ( AuthSession
     , user
+    , expiresAt
 
     , UserDescription
     , userName
@@ -37,20 +38,26 @@ type alias TokenString = String
 parseToken : TokenString -> Maybe AuthSession
 parseToken tokenString =
     let decoder = JD.field "dat" userDescriptionDecoder
+        expiration = Jwt.getTokenExpirationMillis tokenString |> Result.withDefault 0
     in Jwt.decodeToken decoder tokenString
         |> Result.map (\usr -> AuthSession
             { authToken = AuthToken tokenString
             , userData =  usr
+            , expiresAt = expiration
             })
         |> Result.toMaybe
 
 type AuthSession = AuthSession
     { authToken : AuthToken
     , userData : UserDescription
+    , expiresAt : Int
     }
 
 user : AuthSession -> UserDescription
 user (AuthSession session) = session.userData
+
+expiresAt : AuthSession -> Int
+expiresAt (AuthSession session) = session.expiresAt
 
 type UserDescription = UserDescription UserData
 
