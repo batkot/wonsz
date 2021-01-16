@@ -79,9 +79,11 @@ update command model =
             |> Fx.mapFx next
             |> Fx.map (\l -> Login { loginPage | model = l })
 
-        (ChangePage newPage, page) ->
-            dispatchRoute (pageSession page) newPage
-            |> Fx.mapFx here
+        (ChangePage newRoute, page) ->
+            if pageRoute page == newRoute 
+            then Fx.pure model
+            else dispatchRoute (pageSession page) newRoute
+                    |> Fx.mapFx here
 
         (AccountCommand cmd, Account accountPage) ->
                 A.update accountPage.authSession cmd accountPage.model
@@ -100,7 +102,7 @@ updateSession session page =
             -> toRoute p
                 |> requireLogin
                 |> Fx.pure 
-        (Authenticated auth, Login l) 
+        (Authenticated _, Login l) 
             -> dispatchRoute session l.route
 
         -- Boring dispatch -.-
@@ -139,6 +141,13 @@ pageSession page =
         (Login _) -> Anonymous
         (Account p) -> getSession p
         (NotFound p) -> getSession p
+
+pageRoute : PageModel -> Route
+pageRoute page =
+    case page of
+        (Login p) -> p.route
+        (Account p) -> p.route
+        (NotFound p) -> p.route
 
 toRoute : PageModel -> Route
 toRoute model =

@@ -3,10 +3,12 @@ module Router.Routes exposing
     , routes
 
     , parseUrl
+    , toUrl
     )
 
+import Url.Builder exposing (relative)
 import Url.Parser as UP exposing ((</>)) 
-import Url exposing (Url)
+import Url exposing (Url, toString)
 
 type Route 
     = NotFound
@@ -23,3 +25,14 @@ parseUrl url =
     { url | path = Maybe.withDefault "" url.fragment, fragment = Nothing }
     |> UP.parse routes 
     |> Maybe.withDefault NotFound
+
+toUrl : Route -> String
+toUrl r = 
+    let
+        buildStringUrl = String.append "/#"
+    in
+        case r of
+            NotFound -> ""
+            Account id -> 
+                relative ["account", String.fromInt id] []
+                |> buildStringUrl

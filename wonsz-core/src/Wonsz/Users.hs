@@ -57,11 +57,6 @@ login LoginCommand{..} = do
     verified <- fromMaybe (return Nothing) $ Domain.verifyPassword <$> user <*> Domain.makePassword _loginPassword -- Maybe (m (Maybe User)) -> m (Maybe User)
     return $ UserDescription <$> (Domain.getUserId <$> verified) <*> (Domain.getUserName <$> verified)
 
--- Maybe a 
--- Maybe b
--- f: a -> b -> m (Maybe c)
--- f <$> a <*> b -> Maybe (m Maybe c)
-
 data ChangePasswordCommand = ChangePasswordCommand
     { _changeeUserId :: !Int
     , _changerUserId :: !Int

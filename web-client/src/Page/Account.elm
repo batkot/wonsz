@@ -96,7 +96,7 @@ update auth command model =
             in Fx.pure <| Loaded { m | passwordChange = newModel }
 
         (RequestPasswordChange change, Loaded m) -> 
-            let apiCall = changePassword (ChangePasswordRequest change.currentPassword change.newPassword) auth
+            let apiCall = changePassword (ChangePasswordRequest change.newPassword change.currentPassword) auth
                         |> HE.mapRequest (always ClosePasswordChange)
                 httpFx = Request apiCall (always (PasswordChangeFailed "Error"))
                 newModel = Maybe.map (\p -> { p | status = Changing }) m.passwordChange

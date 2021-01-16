@@ -157,7 +157,7 @@ loggedView d auth subContent =
                 [ class "logged-user" ]
                 [ a 
                     [ class "username" 
-                    , href ("/#account/" ++ ((Auth.user >> Auth.userId >> String.fromInt) auth))
+                    , href (RR.toUrl ((Auth.user >> Auth.userId >> RR.Account) auth))
                     ]
                     [ text ((Auth.user >> Auth.userName) auth) ]
                 , span 
