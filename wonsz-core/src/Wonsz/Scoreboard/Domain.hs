@@ -55,4 +55,3 @@ addParticipant userId board
       participantId = convertId userId
       alreadyParticipates = board ^. scoreboardParticipants & any ((==) participantId . _participantId)
       newParticipant = Participant participantId 0
-

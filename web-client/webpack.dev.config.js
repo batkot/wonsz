@@ -86,7 +86,8 @@ module.exports = {
         }),
         new Webpack.DefinePlugin({
             __API_URL__: "'http://localhost:8080'",
-            __APP_LANG__ : "'pl'"
+            __APP_LANG__ : "'pl'",
+            __APP_TOKEN_THRESHOLD__ : "3"
         })
     ],
     devServer: {

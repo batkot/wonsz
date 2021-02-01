@@ -83,7 +83,8 @@ module.exports = {
         }),
         new Webpack.DefinePlugin({
             __API_URL__: "'prod_api_url'",
-            __APP_LANG__: "'pl'"
+            __APP_LANG__: "'pl'",
+            __APP_TOKEN_THRESHOLD__ : "3"
         })
     ]
 }

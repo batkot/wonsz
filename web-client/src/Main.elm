@@ -57,6 +57,7 @@ type alias Options =
     { apiUrl : String
     , authToken : Maybe String
     , sessionCacheKey : String
+    , tokenRefreshThreshold: Int
     , lang : String
     }
 
@@ -81,7 +82,7 @@ createEnv opt navKey =
             _ -> EN.dictionary
     in
         { baseUrl = HE.Url opt.apiUrl
-        , sessionSettings = S.SessionSettings opt.sessionCacheKey 5
+        , sessionSettings = S.SessionSettings opt.sessionCacheKey opt.tokenRefreshThreshold
         , dict = dict
         , navKey = navKey
         }
