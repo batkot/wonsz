@@ -28,10 +28,7 @@ module.exports = {
                     //Create css files
                     {
                         loader: MiniCssExtractPlugin.loader,
-                        options: {
-                            //Hot module replace
-                            hmr: true
-                        }
+                        options: {}
                     },
                     //Load css
                     'css-loader',
@@ -88,7 +85,8 @@ module.exports = {
             __API_URL__: "'http://localhost:8080'",
             __APP_LANG__ : "'pl'",
             __APP_TOKEN_THRESHOLD__ : "3"
-        })
+        }),
+        new Webpack.HotModuleReplacementPlugin()
     ],
     devServer: {
         inline: true,

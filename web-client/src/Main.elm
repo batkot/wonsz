@@ -34,8 +34,6 @@ import Browser.Navigation as Nav
 import Router.Routes as RR
 import Page as P
 
-import Debug
-
 main : Program Options AppModel Command
 main =
     Browser.application
@@ -89,7 +87,7 @@ createEnv opt navKey =
 
 update : Command -> AppModel -> (AppModel, Cmd Command)
 update cmd app =
-    case Debug.log "Command: " cmd of
+    case cmd of
         (SessionCmd sessionCmd) ->
             let session = P.pageSession app.currentPage
                 fxSession = S.updateFx app.env sessionCmd session
