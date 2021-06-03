@@ -24,6 +24,8 @@ import IO.Api exposing (getScoreboardSummary, ScoreboardSummary)
 
 import Scoreboard exposing (view)
 
+type alias DashboardData = List ScoreboardSummary
+
 type Command 
     = LoadDashboard Int
     | GotScoreboardSummary (List ScoreboardSummary)
@@ -31,6 +33,7 @@ type Command
 
 type Model 
     = LoadingDashboard Int
+    | DashboardLoaded DashboardData
     | Error 
 
 init : UserDescription -> Fx (CommandFx Command) Model
@@ -40,7 +43,7 @@ init user =
         |> Fx.addFx (Raise (LoadDashboard userId))
 
 update : AuthSession -> Command -> Model -> Fx (HttpFx Command) Model
-update auth cmd model =
+update auth cmd _ =
     case cmd of 
         LoadDashboard accountId -> 
             let apiCall = getScoreboardSummary accountId auth
@@ -49,7 +52,8 @@ update auth cmd model =
             in LoadingDashboard accountId 
                 |> Fx.addFx httpFx
 
-        GotScoreboardSummary _ -> Fx.pure model
+        GotScoreboardSummary data -> 
+            DashboardLoaded data |> Fx.pure
         GotError -> Fx.pure Error
 
 view : HasBaseUrl (HasDict a) -> Model -> Html cmd
@@ -65,4 +69,5 @@ foo : HasDict a -> Model -> Html cmd
 foo { dict } model =
     case model of 
         LoadingDashboard _ -> spinner
+        DashboardLoaded x -> List.length x |> String.fromInt |> text
         Error -> exclamationMessage dict.loadErrorMessage
