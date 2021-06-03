@@ -33,7 +33,7 @@ main =
         Right opt -> runServer opt
 
 connString :: ByteString
-connString = "postgres://wonsz-web:dupa@localhost:5432/persistent-test"
+connString = "postgres://wonsz-web:dupa@localhost:5432/test-persistent"
 
 runServer :: Options -> IO ()
 runServer opt = do

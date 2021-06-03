@@ -4,9 +4,12 @@
 
 module Wonsz.Scoreboard.Domain
     ( Scoreboard
+    , scoreboardId
+
     , newScoreboard
     , addParticipant
 
+    , User
     ) where
 
 import Lens.Micro.Platform (makeLenses, (^.), (<>~), (&), (.~))

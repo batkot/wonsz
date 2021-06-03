@@ -15,6 +15,9 @@ import Data.ByteString (ByteString)
 
 newtype Id a = Id { unId :: ByteString } deriving stock (Eq, Show)
 
+parseId :: ByteString -> Id a
+parseId = Id
+
 class ConvertableIds a b where
     convertId :: Id a -> Id b
     convertId = Id . unId
@@ -27,4 +30,3 @@ instance {-# OVERLAPPABLE #-}
     , MonadTrans t
     , Monad (t m)) => IdGeneratorMonad (t m) where
     nextId = lift nextId
-

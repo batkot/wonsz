@@ -23,7 +23,8 @@ import Wonsz.Users (UserMonad)
 import Wonsz.Crypto (CryptoMonad)
 
 type AppApi auth =
-    "season" :> SeasonApi auth :<|> AccountApi auth
+    "season" :> SeasonApi auth 
+    :<|> AccountApi auth
 
 type Api auth =
     ("api" :> AppApi auth)
