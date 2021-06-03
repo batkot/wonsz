@@ -1,5 +1,4 @@
 {-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DerivingStrategies #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE OverloadedStrings #-}
@@ -21,28 +20,13 @@ import Servant ((:>), Get, JSON, ServerT, ServerError, Capture, err401)
 import Servant.Auth.Server (Auth, AuthResult(..))
 
 import Wonsz.Server.Authentication (Protected, protected, AuthenticatedUser, getAuthenticatedUserId, protected2)
-
-data ParticipantDetails = ParticipantDetails
-    { pdId :: !Int
-    , pdLogin :: !Text
-    , pdName :: !Text
-    , pdAvatarUrl :: !Text
-    } 
-    deriving stock (Show, Eq, Generic)
-
-instance ToJSON ParticipantDetails where
-    toJSON (ParticipantDetails id login name av) = object
-        [ "id" .= id
-        , "login" .= login
-        , "name" .= name
-        , "avatarUrl" .= av
-        ]
+import Wonsz.Server.Account (AccountDetails(..))
 
 data ScoreboardSummary = ScoreboardSummary
     { ssId :: !Int
     , ssName :: !Text
     , ssParticipantsCount :: !Int
-    , ssLeader :: ParticipantDetails
+    , ssLeader :: AccountDetails
     }
     deriving stock (Show, Eq, Generic)
 
@@ -72,4 +56,4 @@ dashboardApi _ = const $ throwError err401
 dashboardHandler :: Monad m => Int -> m UserDashboard
 dashboardHandler _ = return $ fakeScoreboard <$> [1..10]
   where
-    fakeScoreboard id = ScoreboardSummary id (pack ("Scoreboard " <> show id)) 10 $ ParticipantDetails 1 "btk" "Tomasz Batko" "url:://fake"
+    fakeScoreboard id = ScoreboardSummary id (pack ("Scoreboard " <> show id)) 10 $ AccountDetails 1 "btk" "Tomasz Batko" "/static/btk.jpg"

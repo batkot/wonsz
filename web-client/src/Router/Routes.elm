@@ -14,11 +14,13 @@ type Route
     = NotFound
     | Account Int
     | Dashboard
+    | Scoreboard Int
 
 routes : UP.Parser (Route -> a) a
 routes = UP.oneOf
     [ UP.map Account (UP.s "account" </> UP.int)
     , UP.map Dashboard UP.top
+    , UP.map Scoreboard (UP.s "scoreboard" </> UP.int)
     ]
 
 parseUrl : Url -> Route
@@ -38,3 +40,6 @@ toUrl r =
                 relative ["account", String.fromInt id] []
                 |> buildStringUrl
             Dashboard -> ""
+            Scoreboard id ->
+                relative ["scoreboard", String.fromInt id] []
+                |> buildStringUrl

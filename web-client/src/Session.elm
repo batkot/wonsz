@@ -9,12 +9,8 @@ module Session exposing
 
 import Auth exposing (AuthSession, TokenString)
 
-import Result.Extra as RE
-
-import Http.Extra as HE exposing (HasBaseUrl)
+import Http.Extra as HE 
 import IO.Api as Api
-import IO.LocalStorage as LS
-import Delay as D
 
 import Effect as Fx exposing (Fx)
 import Effect.Command exposing (CommandFx(..))
@@ -51,6 +47,7 @@ updateFx { sessionSettings } command session =
     case (command, session) of
         (ValidateToken token, _) ->
             let mkRefreshFx s = Auth.expiresAt s - (sessionSettings.sessionRefresh * 60 * 1000)
+                                    |> max 1 
                                     |> Schedule RenewToken
                 lsFx = Store sessionSettings.cacheKey token
             in Auth.parseToken token

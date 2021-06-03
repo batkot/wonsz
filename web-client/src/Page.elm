@@ -138,7 +138,7 @@ dispatchRoute session route =
             -> A.init accountId
                 |> Fx.map (\model -> Account
                     { authSession = auth
-                    , title = "Wonsz account " ++ String.fromInt accountId
+                    , title = "Wonsz - account "
                     , model = model
                     , route = route
                     })
@@ -154,6 +154,14 @@ dispatchRoute session route =
                     })
                 |> Fx.mapFx (CommandFx.map DashboardCommand)
 
+        (Authenticated auth, Router.Routes.Scoreboard scoreboardId)
+            -> Fx.pure <| NotFound <|
+                { authSession = auth
+                , title = "Scoreboard - " ++ String.fromInt scoreboardId
+                , route = route
+                , model = {}
+                }
+
 pageSession : PageModel -> Session
 pageSession page =
     case page of
@@ -168,7 +176,7 @@ toRoute model =
         Login p -> p.route
         Account p -> p.route
         NotFound p -> p.route
-        (Dashboard p) -> p.route
+        Dashboard p -> p.route
 
 requireLogin : Route -> PageModel
 requireLogin redirectTo = Login

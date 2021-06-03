@@ -1,5 +1,7 @@
 @import "colors.scss";
 
+$gold: #D4AF37;
+
 .dashboard {
 
     .title {
@@ -11,5 +13,51 @@
 
     .errored {
         height: 100px;
+    }
+
+    .scoreboards {
+        a {
+            text-decoration: none;
+            font-weight: bold;
+            color: $white;
+        }
+
+        .scoreboard {
+            margin: 20px 0;
+            .leader-avatar {
+                display: inline-block;
+                position: relative;
+                height: 50px;
+
+                img {
+                    height: 100%;
+                    border-radius: 50%;
+                }
+
+                &:after {
+                    background: $gold;
+                    border-radius: 50%;
+                    height: 15px;
+                    width: 15px;
+                    bottom: 0px;
+                    left: 0px;
+                    position: absolute;
+                    content: "";
+                    color: white;
+                }
+            }
+
+            .name {
+                text-transform: uppercase;
+                font-size: 1.3rem;
+                display: inline-block;
+            }
+
+            &:hover {
+                .name {
+                    text-decoration: underline;
+                }
+            }
+        }
     }
 }

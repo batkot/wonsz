@@ -12,6 +12,7 @@ module Wonsz.Server.Account
     , accountApi
 
     , ChangePasswordRequest(..)
+    , AccountDetails(..)
     ) where
 
 import qualified Data.Text as Text
@@ -92,4 +93,4 @@ accountDetailsHandler _ userId = do
             (getUserId u)
             ((Text.unpack . getUserLogin) u)
             ((Text.unpack . getUserName) u)
-            ("/static/" <> (Text.unpack . getUserLogin) u <> ".jpg" )
+            ("/static/" <> (Text.unpack . getUserLogin) u <> ".jpg")

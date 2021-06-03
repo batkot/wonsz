@@ -8,10 +8,10 @@ module Page.Dashboard exposing
     , view
     )
 
-import Html exposing (Html, div, text)
-import Html.Attributes exposing (class)
+import Html exposing (Html, div, text, a, img)
+import Html.Attributes exposing (class, href, src)
 
-import Http.Extra as HE exposing (HasBaseUrl)
+import Http.Extra as HE exposing (HasBaseUrl, Url(..))
 import Html.Extra exposing (spinner, exclamationMessage)
 import Lang exposing (HasDict)
 import Auth exposing (UserDescription, AuthSession)
@@ -21,8 +21,7 @@ import Effect.Http exposing (HttpFx(..))
 import Effect.Command exposing (CommandFx(..))
 
 import IO.Api exposing (getScoreboardSummary, ScoreboardSummary)
-
-import Scoreboard exposing (view)
+import Router.Routes as RR
 
 type alias DashboardData = List ScoreboardSummary
 
@@ -54,20 +53,39 @@ update auth cmd _ =
 
         GotScoreboardSummary data -> 
             DashboardLoaded data |> Fx.pure
+
         GotError -> Fx.pure Error
 
 view : HasBaseUrl (HasDict a) -> Model -> Html cmd
 view env model = 
-    div [ class "dashboard" ] 
-        [ div 
-            [ class "title" ]
-            [ text <| env.dict.dashboardTitle ]
-        , foo env model
-        ]
+    let
+        subview = case model of 
+            LoadingDashboard _ -> spinner
+            DashboardLoaded boards -> dashboardView env boards
+            Error -> exclamationMessage env.dict.loadErrorMessage
+    in 
+        div [ class "dashboard" ] 
+           [ div 
+               [ class "title" ]
+               [ text <| env.dict.dashboardTitle ]
+           , subview
+           ]
 
-foo : HasDict a -> Model -> Html cmd
-foo { dict } model =
-    case model of 
-        LoadingDashboard _ -> spinner
-        DashboardLoaded x -> List.length x |> String.fromInt |> text
-        Error -> exclamationMessage dict.loadErrorMessage
+dashboardView : HasBaseUrl a -> DashboardData -> Html cmd
+dashboardView { baseUrl } scoreboards = 
+    List.map (scoreboardOverview baseUrl) scoreboards
+    |> div [ class "scoreboards"]
+
+scoreboardOverview : Url -> ScoreboardSummary -> Html cmd
+scoreboardOverview (Url baseUrl) scoreboard = 
+    div [ class "scoreboard" ] 
+        [ div 
+            [ class "leader-avatar" ]
+            [ img [src (baseUrl ++ scoreboard.leader.avatarUrl)] []
+            ]
+        , div 
+            [ class "name" ]
+            [ a [ href (RR.toUrl (RR.Scoreboard scoreboard.id)) ]
+                [ text scoreboard.name ]
+            ]
+        ]
