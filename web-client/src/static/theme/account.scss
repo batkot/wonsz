@@ -37,7 +37,6 @@
 
         .password-change {
             margin-top: 5px;
-            max-width: 250px;
 
             input {
                 display: block;
@@ -105,6 +104,10 @@
         .details {
             width: 100%;
             text-align: center;
+
+            .password-change {
+                padding: 0 30px;
+            }
         }
     }
 }
@@ -124,6 +127,10 @@
 
         .details {
             width: 50%;
+
+            .password-change {
+                max-width: 250px;
+            }
         }
     }
 }
