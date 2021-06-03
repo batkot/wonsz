@@ -66,7 +66,7 @@ init : Options -> Url.Url -> Nav.Key -> (AppModel, Cmd Command)
 init opt url key =
     let env = createEnv opt key
         model = RR.parseUrl url
-            |> P.requireLogin
+            |> P.requireLogin env.dict.loginPageTitle
         cmd = Maybe.map (S.ValidateToken >> SessionCmd) opt.authToken
             |> Maybe.map CE.pure
             |> Maybe.withDefault Cmd.none
@@ -96,7 +96,7 @@ update cmd app =
                     |> Fx.runFxComp runCommandFx
                 (newSession, newSessionCmd) = Fx.runFx fxInterpreter fxSession
                 (newPageModel, pageCmd) =
-                    P.updateSession newSession app.currentPage
+                    P.updateSession app.env newSession app.currentPage
                     |> Fx.runFx runCommandFx
                 newApp = { app | currentPage = newPageModel, session = newSession }
                 newCmd = Cmd.batch [ Cmd.map SessionCmd newSessionCmd, Cmd.map PageCmd pageCmd]
@@ -108,7 +108,7 @@ update cmd app =
 
         (PageCmd pageCmd) ->
             let fxPage =
-                    P.update pageCmd app.currentPage
+                    P.update app.env pageCmd app.currentPage
                     |> Fx.mapFx (Fx.mapLeft (FxC.map PageCmd))
                     |> Fx.mapFx (Fx.mapRight (Fx.bimap (FxH.map PageCmd) (FxAT.map (S.ValidateToken >> SessionCmd))))
                 fxInterpreter =

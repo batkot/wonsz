@@ -8,6 +8,12 @@ type alias Dict =
     , badCredentialsMessage : String
     , connectionErrorMessage : String
 
+    , loginPageTitle : String
+    , dashboardPageTitle : String
+    , accountPageTitle : String
+    , scoreboardPageTitle : String
+    , notFoundPageTitle : String
+
     , notFoundMessage : String
     , confirmLabel : String
     , denyLabel : String

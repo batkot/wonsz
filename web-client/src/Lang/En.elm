@@ -11,6 +11,12 @@ dictionary =
     , badCredentialsMessage = "Bad credentials"
     , connectionErrorMessage = "Connection problem"
 
+    , loginPageTitle = "sign in"
+    , dashboardPageTitle = "dashboard"
+    , accountPageTitle = "account"
+    , scoreboardPageTitle = "scoreboard"
+    , notFoundPageTitle = "not found"
+
     , notFoundMessage = "Not found"
     , confirmLabel = "Ok"
     , denyLabel = "Cancel"

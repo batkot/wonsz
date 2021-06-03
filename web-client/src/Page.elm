@@ -73,8 +73,8 @@ type PageCommand
 requestPage : Route -> PageCommand
 requestPage = ChangePage
 
-update : PageCommand -> PageModel -> Fx PageFx PageModel
-update command model =
+update : HasDict a -> PageCommand -> PageModel -> Fx PageFx PageModel
+update env command model =
     case (command, model) of
         (LoginCommand cmd, Login loginPage) ->
             L.update cmd loginPage.model
@@ -85,7 +85,7 @@ update command model =
         (ChangePage newRoute, page) ->
             if toRoute page == newRoute
             then Fx.pure model
-            else dispatchRoute (pageSession page) newRoute
+            else dispatchRoute env (pageSession page) newRoute
                     |> Fx.mapFx here
 
         (AccountCommand cmd, Account accountPage) ->
@@ -102,34 +102,34 @@ update command model =
 
         (_, _) -> Fx.pure model
 
-updateSession : Session -> PageModel -> Fx (CommandFx PageCommand) PageModel
-updateSession session page =
+updateSession : HasDict a -> Session -> PageModel -> Fx (CommandFx PageCommand) PageModel
+updateSession env session page =
     case (session, page) of
         (Anonymous, Login x)
             -> Fx.pure <| Login x
         (Anonymous, p)
             -> toRoute p
-                |> requireLogin
+                |> requireLogin env.dict.loginPageTitle
                 |> Fx.pure
         (Authenticated _, Login l)
-            -> dispatchRoute session l.route
+            -> dispatchRoute env session l.route
 
         -- Boring dispatch -.-
         (Authenticated auth, Account p) -> Fx.pure <| Account <| updateAuthSession auth p
         (Authenticated auth, NotFound p) -> Fx.pure <| NotFound <| updateAuthSession auth p
         (Authenticated auth, Dashboard p) -> Fx.pure <| Dashboard <| updateAuthSession auth p
 
-dispatchRoute : Session -> Route -> Fx (CommandFx PageCommand) PageModel
-dispatchRoute session route =
+dispatchRoute : HasDict a -> Session -> Route -> Fx (CommandFx PageCommand) PageModel
+dispatchRoute { dict } session route =
     case (session, route) of
         (Anonymous, r)
-            -> requireLogin r
+            -> requireLogin dict.loginPageTitle r
                 |> Fx.pure
 
         (Authenticated auth, Router.Routes.NotFound)
             -> Fx.pure <| NotFound <|
                 { authSession = auth
-                , title = "Not found"
+                , title = createTitle dict.notFoundPageTitle
                 , route = route
                 , model = {}
                 }
@@ -138,7 +138,7 @@ dispatchRoute session route =
             -> A.init accountId
                 |> Fx.map (\model -> Account
                     { authSession = auth
-                    , title = "Wonsz - account "
+                    , title = createTitle dict.accountPageTitle
                     , model = model
                     , route = route
                     })
@@ -148,16 +148,16 @@ dispatchRoute session route =
             -> D.init (Auth.user auth)
                 |> Fx.map (\model -> Dashboard
                     { authSession = auth
-                    , title = "Wonsz - Dashboard"
+                    , title = createTitle dict.dashboardPageTitle
                     , route = route
                     , model = model
                     })
                 |> Fx.mapFx (CommandFx.map DashboardCommand)
 
-        (Authenticated auth, Router.Routes.Scoreboard scoreboardId)
+        (Authenticated auth, Router.Routes.Scoreboard _)
             -> Fx.pure <| NotFound <|
                 { authSession = auth
-                , title = "Scoreboard - " ++ String.fromInt scoreboardId
+                , title = createTitle dict.scoreboardPageTitle
                 , route = route
                 , model = {}
                 }
@@ -178,11 +178,14 @@ toRoute model =
         NotFound p -> p.route
         Dashboard p -> p.route
 
-requireLogin : Route -> PageModel
-requireLogin redirectTo = Login
-    { title = "Wonsz - login"
+requireLogin : String-> Route -> PageModel
+requireLogin  loginTitle redirectTo = Login
+    { title = createTitle loginTitle
     , route = redirectTo
     , model = L.emptyModel redirectTo }
+
+createTitle : String -> String
+createTitle subtitle = "Wonsz - " ++ subtitle
 
 updateAuthSession : AuthSession -> Authorized a -> Authorized a
 updateAuthSession session authorized = { authorized | authSession = session }
