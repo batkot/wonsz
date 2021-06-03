@@ -84,10 +84,10 @@ type alias AccountDetails =
 accountDetailsDecoder : JD.Decoder AccountDetails
 accountDetailsDecoder =
     JD.succeed AccountDetails
-    |> JDP.required "accountId" JD.int
-    |> JDP.required "accountLogin" JD.string
-    |> JDP.required "accountName" JD.string
-    |> JDP.required "accountAvatarUrl" JD.string
+    |> JDP.required "id" JD.int
+    |> JDP.required "login" JD.string
+    |> JDP.required "name" JD.string
+    |> JDP.required "avatarUrl" JD.string
 
 getAccountDetails : Int -> Authorized AccountDetails
 getAccountDetails accountId =

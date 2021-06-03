@@ -9,7 +9,8 @@ module Wonsz.Server
 
 import Wonsz.Server.Authentication (Protected, AuthApi, authApi, AuthenticatedUser, protected2)
 import Wonsz.Server.Season (SeasonApi, seasonApi)
-import Wonsz.Server.Account (AccountApi, accountApi, accountApi)
+import Wonsz.Server.Account (AccountApi, accountApi)
+import Wonsz.Server.Dashboard (DashboardApi, dashboardApi)
 
 import Servant ( Application, ServerT, Proxy(..), (:>), (:<|>)(..), serveWithContext, hoistServerWithContext, Context(..), ServerError, Handler, Raw, serveDirectoryWebApp, err401)
 import Servant.Auth.Server (CookieSettings, JWTSettings, defaultJWTSettings, defaultCookieSettings, JWT, AuthResult(..), ThrowAll(..))
@@ -25,6 +26,7 @@ import Wonsz.Crypto (CryptoMonad)
 type AppApi auth =
     "season" :> SeasonApi auth 
     :<|> AccountApi auth
+    :<|> DashboardApi auth
 
 type Api auth =
     ("api" :> AppApi auth)
@@ -40,7 +42,7 @@ server
     -> ServerT (Api auth) m
 server jwt = api :<|> authApi jwt :<|> serveDirectoryWebApp "static"
   where
-    api = seasonApi :<|> accountApi
+    api = seasonApi :<|> accountApi :<|> dashboardApi
 
 app :: MonadIO m
     => MonadError ServerError m
