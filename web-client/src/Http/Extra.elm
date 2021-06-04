@@ -37,7 +37,6 @@ httpErrorToMessage err = case err of
     Http.BadStatus x -> "Bad status: " ++ String.fromInt x
     Http.BadBody x -> "Bad response body: " ++ x
 
-
 unUrl : Url -> String
 unUrl (Url x) = x
 

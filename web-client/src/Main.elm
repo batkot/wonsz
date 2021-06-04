@@ -87,35 +87,39 @@ createEnv opt navKey =
 
 update : Command -> AppModel -> (AppModel, Cmd Command)
 update cmd app =
-    case cmd of
-        (SessionCmd sessionCmd) ->
-            let session = P.pageSession app.currentPage
-                fxSession = S.updateFx app.env sessionCmd session
-                fxInterpreter =
-                    Fx.runFxComp runLocalStorageFx (runHttpFx app.env.baseUrl)
-                    |> Fx.runFxComp runCommandFx
-                (newSession, newSessionCmd) = Fx.runFx fxInterpreter fxSession
-                (newPageModel, pageCmd) =
-                    P.updateSession app.env newSession app.currentPage
-                    |> Fx.runFx runCommandFx
-                newApp = { app | currentPage = newPageModel, session = newSession }
-                newCmd = Cmd.batch [ Cmd.map SessionCmd newSessionCmd, Cmd.map PageCmd pageCmd]
-            in
-                (newApp, newCmd)
+    let httpRunner url = S.handle401 identity SessionCmd >> runHttpFx url
+    in
+        case cmd of
+            (SessionCmd sessionCmd) ->
+                let session = P.pageSession app.currentPage
+                    fxSession = S.updateFx app.env sessionCmd session
+                        |> Fx.mapFx (Fx.mapLeft (FxC.map SessionCmd))
+                        |> Fx.mapFx (Fx.mapRight (Fx.mapRight (FxH.map SessionCmd)))
+                    fxInterpreter =
+                        Fx.runFxComp runLocalStorageFx (httpRunner app.env.baseUrl)
+                        |> Fx.runFxComp runCommandFx
+                    (newSession, newSessionCmd) = Fx.runFx fxInterpreter fxSession
+                    (newPageModel, pageCmd) =
+                        P.updateSession app.env newSession app.currentPage
+                        |> Fx.runFx runCommandFx
+                    newApp = { app | currentPage = newPageModel, session = newSession }
+                    newCmd = Cmd.batch [ newSessionCmd, Cmd.map PageCmd pageCmd]
+                in
+                    (newApp, newCmd)
 
-        (RoutingCmd routingCmd) ->
-                ( app, R.handleRouting app.env routingCmd )
+            (RoutingCmd routingCmd) ->
+                    ( app, R.handleRouting app.env routingCmd )
 
-        (PageCmd pageCmd) ->
-            let fxPage =
-                    P.update app.env pageCmd app.currentPage
-                    |> Fx.mapFx (Fx.mapLeft (FxC.map PageCmd))
-                    |> Fx.mapFx (Fx.mapRight (Fx.bimap (FxH.map PageCmd) (FxAT.map (S.ValidateToken >> SessionCmd))))
-                fxInterpreter =
-                    Fx.runFxComp (runHttpFx app.env.baseUrl) runAuthenticationTokenFx
-                    |> Fx.runFxComp runCommandFx
-                (newPageModel, newCmd) = Fx.runFx fxInterpreter fxPage
-            in ({ app | currentPage = newPageModel }, newCmd)
+            (PageCmd pageCmd) ->
+                let fxPage =
+                        P.update app.env pageCmd app.currentPage
+                        |> Fx.mapFx (Fx.mapLeft (FxC.map PageCmd))
+                        |> Fx.mapFx (Fx.mapRight (Fx.bimap (FxH.map PageCmd) (FxAT.map (S.ValidateToken >> SessionCmd))))
+                    fxInterpreter =
+                        Fx.runFxComp (httpRunner app.env.baseUrl) runAuthenticationTokenFx
+                        |> Fx.runFxComp runCommandFx
+                    (newPageModel, newCmd) = Fx.runFx fxInterpreter fxPage
+                in ({ app | currentPage = newPageModel }, newCmd)
 
 type alias AppModel =
     { env : Environment

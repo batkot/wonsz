@@ -5,10 +5,13 @@ module Session exposing
     , Command(..)
 
     , updateFx
+
+    , handle401
     )
 
 import Auth exposing (AuthSession, TokenString)
 
+import Http
 import Http.Extra as HE 
 import IO.Api as Api
 
@@ -70,3 +73,11 @@ updateFx { sessionSettings } command session =
             Fx.pure Anonymous
             |> Fx.pushLeft (Clear sessionSettings.cacheKey)
             |> Fx.mapFx next
+
+handle401 : (a -> b) -> (Command -> b) -> HttpFx a -> HttpFx b
+handle401 wrapSuccess wrapError (Request req errHandler) =
+    let newErrorHandler error = case error of
+            Http.BadStatus 401 -> wrapError Logout
+            x -> (errHandler >> wrapSuccess) x
+        newRequest = HE.mapRequest wrapSuccess req
+    in Request newRequest newErrorHandler
