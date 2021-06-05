@@ -1,8 +1,10 @@
 @import "colors.scss";
+@import "utils.scss";
 
 $gold: #D4AF37;
 
 .dashboard {
+    @include fade-in;
 
     .title {
         text-transform: uppercase;

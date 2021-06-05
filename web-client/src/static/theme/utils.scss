@@ -1,0 +1,5 @@
+@mixin fade-in {
+    -webkit-animation: 0.3s fade-in ease-out;
+    -moz-animation: 0.3s fade-in ease-out;
+    animation: 0.3s fade-in ease-out;
+}

@@ -1,4 +1,5 @@
 @import "theme/colors.scss";
+@import "theme/utils.scss";
 @import "theme/login.scss";
 @import "theme/scoreboard.scss";
 @import "theme/account.scss";
@@ -60,6 +61,21 @@ body {
 @keyframes spin {
     from {transform:rotate(0deg);}
     to {transform:rotate(-360deg);}
+}
+
+@-moz-keyframes fade-in {
+    from { opacity: 0 }
+    to { opacity: 1 }
+}
+
+@-webkit-keyframes fade-in {
+    from { opacity: 0 }
+    to { opacity: 1 }
+}
+
+@keyframes fade-in {
+    from { opacity: 0 }
+    to { opacity: 1 }
 }
 
 .logged-container {

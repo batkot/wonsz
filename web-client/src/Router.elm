@@ -23,5 +23,3 @@ handleRouting { navKey } (RouteRequested request) =
 
         External url ->
             Nav.load url
-
-
