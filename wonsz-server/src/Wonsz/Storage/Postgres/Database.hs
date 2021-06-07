@@ -1,4 +1,4 @@
-{-# LANGUAGE DerivingStrategies #-}
+{-# LANGUAGE DerivingStrategies         #-}
 {-# LANGUAGE EmptyDataDecls             #-}
 {-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE GADTs                      #-}
@@ -8,6 +8,7 @@
 {-# LANGUAGE QuasiQuotes                #-}
 {-# LANGUAGE TemplateHaskell            #-}
 {-# LANGUAGE TypeFamilies               #-}
+{-# LANGUAGE TypeApplications           #-}
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE DeriveGeneric #-}
@@ -44,7 +45,8 @@ import qualified Database.Persist               as Persist
 import qualified Database.Persist.Sql           as PS
 import qualified Database.Persist.Postgresql    as P
 import qualified Database.Persist.Postgresql.JSON as PJSON
-import Database.Esqueleto as E (from, where_, (^.), (==.), (=.), select, val, update, set, countRows, count, countDistinct, SqlExpr, Value(..))
+import Database.Esqueleto as E (from, where_, (&&.), (^.), (==.), (=.), select, val, update, set, countRows, count, countDistinct, SqlExpr, Value(..), exists, valkey)
+-- import Database.Esqueleto.Experimental
 import qualified Database.Persist.TH            as PTH
 
 PTH.share [PTH.mkPersist PTH.sqlSettings, PTH.mkMigrate "migrateAll"] [PTH.persistLowerCase|
@@ -54,6 +56,14 @@ PTH.share [PTH.mkPersist PTH.sqlSettings, PTH.mkMigrate "migrateAll"] [PTH.persi
         name Text
         password ByteString
         deriving Show
+
+    Scoreboard
+        scoreboardId Int
+        name Text
+
+    Participant
+        userId AccountId
+        scoreboardId ScoreboardId
 |]
 
 initializePostgresqlPool
@@ -98,9 +108,24 @@ runPostgresBackEndT :: P.ConnectionPool -> PersistentSqlBackEndT m a -> m a
 runPostgresBackEndT pool = flip runReaderT pool . unPersistentSqlBackEndT
 
 instance (Monad m, MonadIO m) => DashboardQueries (PersistentSqlBackEndT m) where
-    getUserDashboard userId = return $ fakeScoreboard <$> reverse [10..21]
-      where
-        fakeScoreboard id = ScoreboardSummary id (pack ("Człowiek wonsz 20" <> show id)) 10 $ WSA.AccountDetails 1 "btk" "Tomasz Batko" "/static/btk.jpg"
+    getUserDashboard userId = do
+        scoreboards <- runSql $ findUserScoreboards userId
+        return $ createScoreboardSummary . P.entityVal <$> scoreboards
+
+createScoreboardSummary :: Scoreboard -> ScoreboardSummary
+createScoreboardSummary (Scoreboard id name) = ScoreboardSummary id name 0 $ WSA.AccountDetails 1 "btk" "Tomek" ""
+
+findUserScoreboards :: MonadIO m => Int -> P.SqlPersistT m [P.Entity Scoreboard]
+findUserScoreboards userId = 
+    select $ 
+        from $ \s -> do
+            where_ $ exists $
+                from $ \(p, acc) -> 
+                    where_ $ 
+                        (p ^. ParticipantScoreboardId ==. s ^. ScoreboardId) 
+                        &&. (p ^. ParticipantUserId ==. acc ^. AccountId)
+                        &&. (acc ^. AccountUserId ==. val userId)
+            return s
 
 instance (Monad m, MonadIO m) => UserMonad (PersistentSqlBackEndT m) where
     getUser userName = do
