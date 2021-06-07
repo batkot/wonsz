@@ -52,14 +52,29 @@
             color: $background;
             text-transform: uppercase;
             margin-top: 15px;
-            padding: 10px 2px;
+            height: 35px;
+            line-height:35px;
+            width: 100%;
+            padding: 0;
             border-radius: .25rem;
             transition: .2s ease-in;
-            cursor: pointer;
 
-            &:hover {
-                color: $green;
-                background: $background;
+            .spinner {
+                display: table-cell;
+                height: 100%;
+            }
+
+            &:not(.in-progress) {
+                cursor: pointer;
+
+                &:hover {
+                    color: $green;
+                    background: $background;
+                }
+            }
+
+            &.in-progress {
+                cursor: wait;
             }
         }
 

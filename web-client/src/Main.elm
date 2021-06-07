@@ -87,7 +87,9 @@ createEnv opt navKey =
 
 update : Command -> AppModel -> (AppModel, Cmd Command)
 update cmd app =
-    let httpRunner url = S.handle401 identity SessionCmd >> runHttpFx url
+    let httpRunner url = case app.session of
+            S.Anonymous -> runHttpFx url
+            _ -> S.handle401 identity SessionCmd >> runHttpFx url
     in
         case cmd of
             (SessionCmd sessionCmd) ->

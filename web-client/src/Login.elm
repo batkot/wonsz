@@ -9,10 +9,10 @@ module Login exposing
     , redirectRoute
     )
 
-import Html exposing (Html, div, input, text, img)
-import Html.Attributes exposing (class, placeholder, type_, value, src)
+import Html exposing (Html, div, input, text, img, span)
+import Html.Attributes exposing (class, placeholder, type_, value, src, disabled, classList)
 import Html.Events exposing (onInput, onClick)
-import Html.Extra exposing (enter, onKey)
+import Html.Extra exposing (enter, onKey, spinner)
 
 import IO.Api as Api
 
@@ -44,6 +44,7 @@ type alias LoginData =
     , password : String
     , redirectToRoute : Route
     , error : Maybe LoginError
+    , inProgress : Bool
     }
 
 redirectRoute : LoginData -> Route
@@ -55,7 +56,7 @@ type LoginError
     | Other String
 
 emptyModel : Route -> LoginData
-emptyModel redirectToRoute = LoginData "" "" redirectToRoute Nothing
+emptyModel redirectToRoute = LoginData "" "" redirectToRoute Nothing False
 
 update : LoginCmd -> LoginData -> Fx LoginFx LoginData
 update cmd model =
@@ -65,12 +66,12 @@ update cmd model =
         PasswordChanged password ->
             Fx.pure { model | password = password }
         RequestLogin ->
-            Fx.pure model
+            Fx.pure { model | error = Nothing, inProgress = True }
             |> Fx.pushLeft (requestLoginFx model)
         LoginFailed err ->
-            Fx.pure { model | error = Just err }
+            Fx.pure { model | error = Just err, inProgress = False }
         LoggedIn token ->
-            Fx.pure model
+            Fx.pure { model | inProgress = False }
             |> Fx.pushRight (raiseTokenAquired token)
 
 requestLoginFx : LoginData -> HttpFx LoginCmd
@@ -92,6 +93,15 @@ view { dict } loginData =
             (Just ConnectionError) -> dict.connectionErrorMessage
             (Just (Other msg)) -> msg
             Nothing -> ""
+        loginBtn = 
+            if loginData.inProgress then 
+                 div 
+                    [ class "login-btn in-progress" ] 
+                    [ spinner ]
+            else div 
+                    [ class "login-btn"
+                    , onClick RequestLogin ]
+                    [ text dict.loginAction ]
     in
         div
         [ class "login-container" ]
@@ -105,6 +115,7 @@ view { dict } loginData =
                     [ type_ "text"
                     , placeholder dict.loginPlaceholder
                     , value loginData.user
+                    , disabled loginData.inProgress
                     , onInput UserNameChanged
                     , onKey enter RequestLogin ]
                     []
@@ -114,6 +125,7 @@ view { dict } loginData =
                     [ type_ "password"
                     , placeholder dict.passwordPlaceholder
                     , value loginData.password
+                    , disabled loginData.inProgress
                     , onInput PasswordChanged
                     , onKey enter RequestLogin ]
                     []
@@ -121,9 +133,6 @@ view { dict } loginData =
             , div
                 [ class "login-error" ]
                 [ text loginErrorText ]
-            , div
-                [ class "login-btn"
-                , onClick RequestLogin ]
-                [ text dict.loginAction ]
+            , loginBtn
             ]
         ]
