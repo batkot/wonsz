@@ -22,6 +22,12 @@ body {
     color: $darkest;
 }
 
+a {
+    text-decoration: none;
+    font-weight: bold;
+    color: $white;
+}
+
 .spinner {
     animation: spin 2s infinite linear;
     filter: invert(100%);

@@ -59,17 +59,13 @@ update auth cmd _ =
 view : HasBaseUrl (HasDict a) -> Model -> Html cmd
 view env model = 
     let
-        subview = case model of 
+        dashboard = case model of 
             LoadingDashboard _ -> spinner
             DashboardLoaded boards -> dashboardView env boards
             Error -> exclamationMessage env.dict.loadErrorMessage
     in 
         div [ class "dashboard" ] 
-           [ div 
-               [ class "title" ]
-               [ text <| env.dict.dashboardTitle ]
-           , subview
-           ]
+            [ dashboard ]
 
 dashboardView : HasBaseUrl a -> DashboardData -> Html cmd
 dashboardView { baseUrl } scoreboards = 
@@ -78,14 +74,16 @@ dashboardView { baseUrl } scoreboards =
 
 scoreboardOverview : Url -> ScoreboardSummary -> Html cmd
 scoreboardOverview (Url baseUrl) scoreboard = 
-    div [ class "scoreboard" ] 
+    a 
+        [ class "scoreboard" 
+        , href (RR.toUrl (RR.Scoreboard scoreboard.id)) 
+        ] 
         [ div 
-            [ class "leader-avatar" ]
-            [ img [src (baseUrl ++ scoreboard.leader.avatarUrl)] []
+            [ class "name" ]
+            [ text scoreboard.name
             ]
         , div 
-            [ class "name" ]
-            [ a [ href (RR.toUrl (RR.Scoreboard scoreboard.id)) ]
-                [ text scoreboard.name ]
+            [ class "leader-avatar" ]
+            [ img [src (baseUrl ++ scoreboard.leader.avatarUrl)] []
             ]
         ]
