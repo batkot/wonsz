@@ -10,7 +10,7 @@ module Wonsz.Server
 import Wonsz.Server.Authentication (Protected, AuthApi, authApi, AuthenticatedUser, protected2)
 import Wonsz.Server.Season (SeasonApi, seasonApi)
 import Wonsz.Server.Account (AccountApi, accountApi)
-import Wonsz.Server.Dashboard (DashboardApi, dashboardApi)
+import Wonsz.Server.Dashboard (DashboardApi, dashboardApi, DashboardQueries)
 
 import Servant ( Application, ServerT, Proxy(..), (:>), (:<|>)(..), serveWithContext, hoistServerWithContext, Context(..), ServerError, Handler, Raw, serveDirectoryWebApp, err401)
 import Servant.Auth.Server (CookieSettings, JWTSettings, defaultJWTSettings, defaultCookieSettings, JWT, AuthResult(..), ThrowAll(..))
@@ -37,6 +37,7 @@ server
     :: MonadIO m
     => MonadError ServerError m
     => UserMonad m
+    => DashboardQueries m
     => CryptoMonad m
     => JWTSettings
     -> ServerT (Api auth) m
@@ -48,6 +49,7 @@ app :: MonadIO m
     => MonadError ServerError m
     => UserMonad m
     => CryptoMonad m
+    => DashboardQueries m
     => (forall x. m x -> Handler x)
     -> JWK
     -> Application

@@ -8,6 +8,9 @@
 module Wonsz.Server.Dashboard 
     ( DashboardApi
     , dashboardApi 
+
+    , DashboardQueries(..)
+    , ScoreboardSummary (..)
     ) where
 
 import Data.Text (Text, pack)
@@ -45,15 +48,22 @@ type DashboardApi auth = "dashboard" :> Protected auth :> DashboardApi'
 type DashboardApi' = 
     Capture "id" Int :> Get '[JSON] UserDashboard
 
+type UserId = Int
+
+class Monad m => DashboardQueries m where
+    getUserDashboard :: UserId -> m [ScoreboardSummary]
+
 dashboardApi 
     :: Monad m
+    => DashboardQueries m
     => MonadError ServerError m
     => AuthResult AuthenticatedUser
     -> ServerT DashboardApi' m
-dashboardApi (Authenticated user) = dashboardHandler 
+dashboardApi (Authenticated user) = getUserDashboard
 dashboardApi _ = const $ throwError err401
 
-dashboardHandler :: Monad m => Int -> m UserDashboard
-dashboardHandler _ = return $ fakeScoreboard <$> [1..10]
-  where
-    fakeScoreboard id = ScoreboardSummary id (pack ("Scoreboard " <> show id)) 10 $ AccountDetails 1 "btk" "Tomasz Batko" "/static/btk.jpg"
+-- dashboardHandler 
+--     :: DashboardQueries m
+--     => UserId
+--     -> m UserDashboard
+-- dashboardHandler = get

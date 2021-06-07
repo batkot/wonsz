@@ -22,13 +22,16 @@ module Wonsz.Storage.Postgres.Database
     ) where
 
 import Data.ByteString (ByteString)
-import Data.Text (Text)
+import Data.Text (Text, pack)
 import Data.Maybe (listToMaybe)
 
 import Control.Monad.IO.Unlift (MonadUnliftIO)
 
 import Wonsz.Users.Domain (User(..))
 import Wonsz.Users (UserMonad(..))
+
+import Wonsz.Server.Dashboard (DashboardQueries(..), ScoreboardSummary(..))
+import qualified Wonsz.Server.Account as WSA
 
 import Control.Monad (void)
 import Control.Monad.Trans.Class (MonadTrans(..))
@@ -93,6 +96,11 @@ runSql sql = PersistentSqlBackEndT $ do
 
 runPostgresBackEndT :: P.ConnectionPool -> PersistentSqlBackEndT m a -> m a
 runPostgresBackEndT pool = flip runReaderT pool . unPersistentSqlBackEndT
+
+instance (Monad m, MonadIO m) => DashboardQueries (PersistentSqlBackEndT m) where
+    getUserDashboard userId = return $ fakeScoreboard <$> reverse [10..21]
+      where
+        fakeScoreboard id = ScoreboardSummary id (pack ("Człowiek wonsz 20" <> show id)) 10 $ WSA.AccountDetails 1 "btk" "Tomasz Batko" "/static/btk.jpg"
 
 instance (Monad m, MonadIO m) => UserMonad (PersistentSqlBackEndT m) where
     getUser userName = do
