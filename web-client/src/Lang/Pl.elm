@@ -29,4 +29,6 @@ dictionary =
     , pointLabel = "pkt."
 
     , dashboardTitle = "Tabele"
+    , noScoreboardsMessage = "Nie masz jeszcze żadnych tabel"
+    , noScoreboardsTipMessage = "Kliknij, aby utworzyć nową"
     }

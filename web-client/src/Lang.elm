@@ -26,6 +26,8 @@ type alias Dict =
     , pointLabel : String
 
     , dashboardTitle : String
+    , noScoreboardsMessage : String
+    , noScoreboardsTipMessage : String
     }
 
 type alias HasDict a = { a | dict : Dict }

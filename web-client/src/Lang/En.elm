@@ -29,4 +29,6 @@ dictionary =
     , pointLabel = "pt"
 
     , dashboardTitle = "Scoreboards"
+    , noScoreboardsMessage = "No scoreboards, yet"
+    , noScoreboardsTipMessage = "Click to create one."
     }

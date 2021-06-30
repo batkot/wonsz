@@ -8,7 +8,7 @@ module Page.Dashboard exposing
     , view
     )
 
-import Html exposing (Html, div, text, a, img)
+import Html exposing (Html, div, text, a, img, h1, span)
 import Html.Attributes exposing (class, href, src)
 
 import Http.Extra as HE exposing (HasBaseUrl, Url(..))
@@ -61,6 +61,7 @@ view env model =
     let
         dashboard = case model of 
             LoadingDashboard _ -> spinner
+            DashboardLoaded [] -> emptyDashboardView env
             DashboardLoaded boards -> dashboardView env boards
             Error -> exclamationMessage env.dict.loadErrorMessage
     in 
@@ -71,6 +72,14 @@ dashboardView : HasBaseUrl a -> DashboardData -> Html cmd
 dashboardView { baseUrl } scoreboards = 
     List.map (scoreboardOverview baseUrl) scoreboards
     |> div [ class "scoreboards"]
+
+emptyDashboardView : HasDict a -> Html cmd
+emptyDashboardView { dict } = 
+    a [ class "no-scoreboards" ]
+        [ h1 [] [ text dict.noScoreboardsMessage ]
+        , span [] [ text dict.noScoreboardsTipMessage ]
+        ]
+
 
 scoreboardOverview : Url -> ScoreboardSummary -> Html cmd
 scoreboardOverview (Url baseUrl) scoreboard = 
