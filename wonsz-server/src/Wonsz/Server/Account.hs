@@ -16,7 +16,7 @@ module Wonsz.Server.Account
     ) where
 
 import qualified Data.Text as Text
-import Data.Aeson (FromJSON(..), ToJSON(..), object, (.=))
+import Data.Aeson (FromJSON(..), ToJSON(..), object, (.=), (.:), Value(..))
 import GHC.Generics (Generic)
 
 import Control.Monad.Error.Class (MonadError, throwError)
@@ -52,12 +52,19 @@ instance ToJSON AccountDetails where
         , "avatarUrl" .= av
         ]
 
+instance FromJSON AccountDetails where
+    parseJSON (Object v) = AccountDetails
+        <$> v .: "id"
+        <*> v .: "login"
+        <*> v .: "name"
+        <*> v .: "avatarUrl"
+
 data ChangePasswordRequest = ChangePasswordRequest
     { newPassword :: !String
     , currentPassword :: !String
     }
     deriving stock (Show, Eq, Generic)
-    deriving anyclass (FromJSON)
+    deriving anyclass (FromJSON, ToJSON)
 
 accountApi
     :: UserMonad m

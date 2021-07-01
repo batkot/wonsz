@@ -14,7 +14,7 @@ module Wonsz.Server.Dashboard
     ) where
 
 import Data.Text (Text, pack)
-import Data.Aeson (FromJSON(..), ToJSON(..), object, (.=))
+import Data.Aeson (FromJSON(..), ToJSON(..), object, (.=), Value(..), (.:))
 import GHC.Generics (Generic)
 
 import Control.Monad.Error.Class (MonadError, throwError)
@@ -34,12 +34,19 @@ data ScoreboardSummary = ScoreboardSummary
     deriving stock (Show, Eq, Generic)
 
 instance ToJSON ScoreboardSummary where
-      toJSON (ScoreboardSummary id name count leader) = object
-        [ "id" .= id
-        , "name" .= name
-        , "participantsCount" .= count
-        , "leader" .= toJSON leader
-        ]
+    toJSON (ScoreboardSummary id name count leader) = object
+      [ "id" .= id
+      , "name" .= name
+      , "participantsCount" .= count
+      , "leader" .= toJSON leader
+      ]
+
+instance FromJSON ScoreboardSummary where
+    parseJSON (Object v) = ScoreboardSummary 
+        <$> v .: "id"
+        <*> v .: "name"
+        <*> v .: "participantsCount"
+        <*> v .: "leader"
 
 type UserDashboard = [ScoreboardSummary]
 

@@ -31,6 +31,7 @@ import Servant.Auth.Client
 import Wonsz.Server (app, Api)
 import Wonsz.Server.Authentication (AuthToken, LoginRequest(..), rawToken)
 import Wonsz.Server.Season (SeasonOverview(..))
+import Wonsz.Server.Dashboard (DashboardQueries(..))
 
 import Wonsz.Users (UserMonad(..))
 import Wonsz.Users.Domain (User(..))
@@ -64,7 +65,7 @@ data WonszClient = WonszClient
 
 createApiClient :: Port -> IO WonszClient
 createApiClient port = do
-    let (seasonClient :<|> accountClient) :<|> (renewTokenClient :<|> loginClient) :<|> _ = client testApi
+    let (seasonClient :<|> accountClient :<|> dashboardClient) :<|> (renewTokenClient :<|> loginClient) :<|> _ = client testApi
     baseUrl <- parseBaseUrl "http://localhost"
     manager <- newManager defaultManagerSettings
     let clientEnv = mkClientEnv manager (baseUrl { baseUrlPort = port })
@@ -93,3 +94,7 @@ instance Monad m => UserMonad (IdentityT m) where
 
 instance Monad m => CryptoMonad (IdentityT m) where
     hash = return . id
+
+instance Monad m => DashboardQueries (IdentityT m) where
+    getUserDashboard = const $ return []
+    

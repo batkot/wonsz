@@ -20,8 +20,6 @@ data AddScoreboardParticipantCommand = AddScoreboardParticipantCommand
     , participantId :: !(Id User)
     }
 
-type ScoreboardRepository m = Scoreboard -> m ()
-
 class Monad m => Repository m key agg where
     find :: key -> m (Maybe agg)
     save :: key -> agg -> m ()
