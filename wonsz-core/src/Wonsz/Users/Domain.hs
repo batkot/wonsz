@@ -26,11 +26,6 @@ import Wonsz.Named (Named, pattern Named)
 import Wonsz.Crypto (CryptoMonad(..))
 
 
--- User domain representation
--- actions:
---  Login/VerifyPassword -> return Some user info
---  ChangePassword
-
 newtype Password = Password { unPassword :: ByteString }
 
 makePassword :: Text -> Maybe Password

@@ -1,9 +1,11 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE DerivingStrategies #-}
+{-# LANGUAGE DeriveGeneric #-}
 
 module Wonsz.Scoreboard.Domain
     ( Scoreboard
+    , ScoreboardAction
     , scoreboardId
 
     , newScoreboard
@@ -12,10 +14,12 @@ module Wonsz.Scoreboard.Domain
     , User
     ) where
 
-import Lens.Micro.Platform (makeLenses, (^.), (<>~), (&), (.~))
+import Lens.Micro.Platform
 
 import Data.Text (Text)
 import Wonsz.Identifier
+import Wonsz.DomainDrivenDesign
+import GHC.Generics (Generic)
 
 -- Scoreboard
 -- scorePoint :: Yada yada -> Scoreboard -> Point
@@ -32,7 +36,7 @@ data Participant = Participant
     { _participantId :: !(Id Participant)
     , _participantScore :: !Int
     }
-    deriving stock (Eq, Show)
+    deriving stock (Eq, Show, Generic)
 
 data Scoreboard = Scoreboard
     { _scoreboardName :: !Text
@@ -40,20 +44,26 @@ data Scoreboard = Scoreboard
     , _scoreboardParticipants :: ![Participant]
     , _scoreboardId :: !(Id Scoreboard)
     }
-    deriving stock (Eq, Show)
+    deriving stock (Eq, Show, Generic)
 
 makeLenses ''Scoreboard
 
-newScoreboard
-    :: IdGeneratorMonad m
-    => Text
-    -> m Scoreboard
-newScoreboard scoreboardName = Scoreboard scoreboardName True [] <$> nextId
+instance Aggregate Scoreboard () ()
 
-addParticipant :: Id User -> Scoreboard -> Scoreboard
+type ScoreboardAction = AggregateAction () () Scoreboard
+
+newScoreboard
+    :: Text
+    -> UnusedId Scoreboard
+    -> ScoreboardAction
+newScoreboard scoreboardName (UnusedId id) = do 
+    raiseEvent ()
+    return $ Scoreboard scoreboardName True [] id
+
+addParticipant :: Id User -> Scoreboard -> ScoreboardAction
 addParticipant userId board
-  | alreadyParticipates = board
-  | otherwise = board & scoreboardParticipants <>~ [newParticipant]
+  | alreadyParticipates = return board
+  | otherwise = return $ board & scoreboardParticipants <>~ [newParticipant]
     where
       participantId = convertId userId
       alreadyParticipates = board ^. scoreboardParticipants & any ((==) participantId . _participantId)

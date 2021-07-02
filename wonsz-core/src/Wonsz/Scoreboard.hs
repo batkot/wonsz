@@ -7,14 +7,21 @@ module Wonsz.Scoreboard
     ) where
 
 import Data.Foldable (forM_)
+import Control.Monad (foldM)
 
 import Data.Text (Text)
+import Data.ByteString (ByteString)
 import Lens.Micro.Platform ((^.))
 
 import Wonsz.Scoreboard.Domain
 import Wonsz.Identifier
+import Wonsz.DomainDrivenDesign
 
-newtype CreateNewScoreboardCommand = CreateNewScoreboardCommand { scoreboardName :: Text }
+data CreateNewScoreboardCommand = CreateNewScoreboardCommand 
+    { scoreboardName :: !Text
+    , participantIds :: ![ByteString]
+    }
+
 data AddScoreboardParticipantCommand = AddScoreboardParticipantCommand 
     { targetScoreboardId :: !(Id Scoreboard)
     , participantId :: !(Id User)
@@ -29,9 +36,13 @@ createNewScoreboard
     => Repository m (Id Scoreboard) Scoreboard
     => CreateNewScoreboardCommand
     -> m ()
-createNewScoreboard (CreateNewScoreboardCommand newScoreboardName) = do
-    scoreboard <- newScoreboard newScoreboardName
-    save (scoreboard ^. scoreboardId) scoreboard
+createNewScoreboard (CreateNewScoreboardCommand newScoreboardName participants) = do
+    result <- createScoreboardAction <$> nextId
+    tmpSaveFoo result
+  where
+    createScoreboardAction id = do
+        scoreboard <- newScoreboard newScoreboardName id
+        foldM (flip addParticipant) scoreboard (parseId <$> participants)
 
 addScoreboardParticipant
     :: Repository m (Id Scoreboard) Scoreboard
@@ -39,4 +50,9 @@ addScoreboardParticipant
     -> m ()
 addScoreboardParticipant (AddScoreboardParticipantCommand scoreboardId participantId) = do
     scoreboard <- find scoreboardId
-    forM_ (addParticipant participantId <$> scoreboard) (save scoreboardId)
+    forM_ (addParticipant participantId <$> scoreboard) tmpSaveFoo
+
+tmpSaveFoo :: Repository m (Id Scoreboard) Scoreboard => ScoreboardAction -> m ()
+tmpSaveFoo = dispatch . runAggregateAction 
+  where 
+    dispatch = either (const (return ())) (\(scoreboard, _) -> save (scoreboard ^. scoreboardId) scoreboard)

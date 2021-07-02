@@ -22,6 +22,7 @@ module Wonsz.Storage.Postgres.Database
     , runPostgresBackEndT
     ) where
 
+import Data.Aeson (FromJSON, ToJSON)
 import Data.ByteString (ByteString)
 import Data.Text (Text, pack)
 import Data.Maybe (listToMaybe)
@@ -29,6 +30,7 @@ import Data.Maybe (listToMaybe)
 import Control.Monad.IO.Unlift (MonadUnliftIO)
 
 import Wonsz.Users.Domain (User(..))
+import qualified Wonsz.Scoreboard.Domain as WSD
 import Wonsz.Users (UserMonad(..))
 
 import Wonsz.Server.Dashboard (DashboardQueries(..), ScoreboardSummary(..))
