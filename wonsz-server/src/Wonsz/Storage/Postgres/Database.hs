@@ -9,6 +9,7 @@
 {-# LANGUAGE TemplateHaskell            #-}
 {-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE TypeApplications           #-}
+{-# LANGUAGE DataKinds           #-}
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE DeriveGeneric #-}
@@ -42,7 +43,7 @@ import Control.Monad.Reader (ReaderT(..), ask)
 import Control.Monad.Error.Class (MonadError)
 import Control.Monad.Identity (IdentityT(..))
 import           Control.Monad.IO.Class  (liftIO, MonadIO(..))
-import           Control.Monad.Logger    (MonadLogger, NoLoggingT(..))
+import           Control.Monad.Logger    (MonadLoggerIO)
 import qualified Database.Persist               as Persist
 import qualified Database.Persist.Sql           as PS
 import qualified Database.Persist.Postgresql    as P
@@ -70,7 +71,7 @@ PTH.share [PTH.mkPersist PTH.sqlSettings, PTH.mkMigrate "migrateAll"] [PTH.persi
 
 initializePostgresqlPool
     :: MonadUnliftIO m
-    => MonadLogger m
+    => MonadLoggerIO m
     => P.ConnectionString
     -> Int
     -> m P.ConnectionPool
