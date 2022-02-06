@@ -12,7 +12,7 @@ const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const Webpack = require('webpack');
 
 module.exports = {
-    mode: 'production',
+    mode: 'development',
     entry: appConfig.entryPoint,
     output: {
         path: path.join(__dirname, appConfig.buildPath),
