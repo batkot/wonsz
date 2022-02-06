@@ -1,0 +1,85 @@
+@import "./colors.scss";
+
+.login-page {
+    height: 100vh;
+    width: 100vw;
+    margin: 0;
+    padding: 0;
+    color: $white;
+
+    background-image: linear-gradient(to bottom right, $yellow, $green);
+    position: relative;
+
+    .login-component {
+        margin: 0;
+        padding: 50px;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+
+        .logo {
+            margin: 20px 5px;
+
+            img {
+                filter: invert(100%);
+                max-width: 200px;
+            }
+        }
+
+        input {
+            display: block;
+            margin: 16px 0px;
+            padding: 8px 5px;
+            border: 0px;
+            border-bottom: 1px solid $grey;
+            box-shadow: none;
+            background: transparent;
+            color: $grey;
+
+            &:focus {
+                border-bottom: 1px solid $white;
+                color: $white;
+            }
+        }
+
+        .login-error {
+            padding: 10px 0;
+            height: 15px;
+            color: $error-font;
+            font-size: 0.7rem;
+            font-weight: 400;
+        }
+
+        .login-btn {
+            color: $background;
+            text-transform: uppercase;
+            margin-top: 15px;
+            height: 35px;
+            line-height:35px;
+            width: 100%;
+            padding: 0;
+            border-radius: .25rem;
+            transition: .2s ease-in;
+
+            .spinner {
+                display: table-cell;
+                height: 100%;
+            }
+
+            &:not(.in-progress) {
+                cursor: pointer;
+
+                &:hover {
+                    color: $green;
+                    background: $background;
+                }
+            }
+
+            &.in-progress {
+                cursor: wait;
+            }
+        }
+    }
+}

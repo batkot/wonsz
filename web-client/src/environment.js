@@ -1,6 +1,6 @@
 exports.requireAssets = basePath => {
     return {
-        purescriptLogoUrl: require(`${basePath}/images/purescript-logo.svg`)
+        logoUrl: require(`${basePath}/images/logo.png`)
     }
 }
 

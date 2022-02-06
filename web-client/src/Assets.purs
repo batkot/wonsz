@@ -4,5 +4,5 @@ module Assets
 type AssetUrl = String
 
 type Assets =
-    { purescriptLogoUrl :: AssetUrl
+    { logoUrl :: AssetUrl
     }

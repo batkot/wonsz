@@ -1,22 +1,17 @@
+@import "theme/colors.scss";
+@import "theme/login.scss";
+
+::placeholder {
+    opacity: .5;
+    color: $grey;
+}
+
+* {
+    box-sizing: border-box;
+}
+
 body {
-    transition: 1s;
     margin: 0;
     padding:0;
-    width: 100vw;
-    height: 100vh;
-
-    .greet-component {
-        margin: 0;
-        padding:0;
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        text-align: center;
-
-        img {
-            width: 25vw;
-            display: block;
-        }
-    }
+    transition: 1s;
 }
