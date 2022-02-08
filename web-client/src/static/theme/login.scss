@@ -53,7 +53,7 @@
         }
 
         .login-btn {
-            color: $background;
+            color: $grey;
             text-transform: uppercase;
             margin-top: 15px;
             height: 35px;
@@ -63,13 +63,18 @@
             border-radius: .25rem;
             transition: .2s ease-in;
 
-            .spinner {
+            img {
                 display: table-cell;
                 height: 100%;
+                filter: invert(100%);
             }
 
-            &:not(.in-progress) {
+            cursor: not-allowed;
+
+
+            &.enabled {
                 cursor: pointer;
+                color: $background;
 
                 &:hover {
                     color: $green;

@@ -1,6 +1,7 @@
 exports.requireAssets = basePath => {
     return {
-        logoUrl: require(`${basePath}/images/logo.png`)
+        logoUrl: require(`${basePath}/images/logo.png`),
+        singleSnakeUrl: require(`${basePath}/images/single-snake.png`)
     }
 }
 
