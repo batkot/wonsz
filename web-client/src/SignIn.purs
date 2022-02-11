@@ -1,17 +1,16 @@
-module Component (component) where
+module SignIn (component) where
 
-import Data.Tuple
 import Prelude
 
 import Assets (Assets)
-import Control.Monad.List.Trans (filter)
 import DOM.HTML.Indexed.InputType (InputType(..))
 import Data.Array as A
+import Data.Tuple (Tuple(..), fst, snd)
+import Dict (Dict)
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
-import Logger (class MonadLogger, log)
 import Web.UIEvent.KeyboardEvent (code)
 
 type State = 
@@ -30,27 +29,27 @@ emptyState =
 data Action 
     = UsernameChanged String
     | PasswordChanged String
-    | RequestLogIn 
+    | RequestSignIn 
     | KeyDown String
 
-canLogIn :: State -> Boolean
-canLogIn state =
+canSignIn :: State -> Boolean
+canSignIn state =
     state.username /= "" && state.password /= "" && not state.inProgress
 
 condClasses :: forall r i. Array (Tuple HH.ClassName Boolean) -> HH.IProp (class :: String | r) i
 condClasses = 
     HP.classes <<< map fst <<< A.filter snd
 
-component :: forall q i o m. MonadLogger m => Assets -> String -> H.Component q i o m
-component assets greeting = 
+component :: forall q i o m. Dict -> Assets -> H.Component q i o m
+component dict assets = 
     H.mkComponent 
         { initialState: \_ -> emptyState
-        , render: render assets.singleSnakeUrl assets.logoUrl
+        , render: render dict assets.logoUrl
         , eval: H.mkEval $ H.defaultEval { handleAction = handleAction }
         }
 
-render :: forall m. String -> String -> State -> H.ComponentHTML Action () m
-render spinnerUrl logoUrl state = 
+render :: forall m. Dict -> String -> State -> H.ComponentHTML Action () m
+render dict logoUrl state =
     HH.div
         [ HP.class_ (HH.ClassName "login-page") ]
         [ HH.div 
@@ -61,7 +60,7 @@ render spinnerUrl logoUrl state =
 
             , HH.input
                 [ HP.type_ InputText 
-                , HP.placeholder "Użytkownik"
+                , HP.placeholder dict.loginPlaceholder
                 , HP.value state.username
                 , HP.disabled state.inProgress
                 , HE.onValueInput UsernameChanged
@@ -69,7 +68,7 @@ render spinnerUrl logoUrl state =
                 ]
             , HH.input
                 [ HP.type_ InputPassword
-                , HP.placeholder "Hasło"
+                , HP.placeholder dict.passwordPlaceholder
                 , HP.value state.password
                 , HP.disabled state.inProgress
                 , HE.onValueInput PasswordChanged
@@ -81,33 +80,33 @@ render spinnerUrl logoUrl state =
             , HH.div
                 [ condClasses 
                     [ (Tuple (HH.ClassName "login-btn") true)
-                    , (Tuple (HH.ClassName "enabled") (canLogIn state))
+                    , (Tuple (HH.ClassName "enabled") (canSignIn state))
                     , (Tuple (HH.ClassName "in-progress") state.inProgress)
                     ]
-                , HE.onClick (\_ -> RequestLogIn)
+                , HE.onClick (\_ -> RequestSignIn)
                 ]
                 [ logInBtnContent ]
             ]
         ]
     where
-      logInBtnContent = 
-          if state.inProgress 
-              then HH.img [ HP.src spinnerUrl ]
-              else HH.text "Zaloguj"
+        logInBtnContent = if state.inProgress 
+            then HH.i [ HP.class_ (HH.ClassName "i-spinner") ] [] 
+            else HH.text dict.loginAction
 
-handleAction :: forall o m. MonadLogger m => Action -> H.HalogenM State Action () o m Unit
+handleAction :: forall o m. Action -> H.HalogenM State Action () o m Unit
 handleAction (UsernameChanged  newUsername) =
     H.modify_ $ \st -> st { username = newUsername }
 
 handleAction (PasswordChanged  newPassword) = do
     H.modify_ $ \st -> st { password = newPassword }
 
-handleAction RequestLogIn =
-    H.modify_ $ \st -> st { inProgress = true }
-
-handleAction (KeyDown keyCode) = do
-    state <- H.get
-    if (keyCode == "Enter" && canLogIn state) 
-        then handleAction RequestLogIn
+handleAction RequestSignIn = do
+    loginAllowed <- H.gets canSignIn
+    if loginAllowed 
+        then H.modify_ $ \st -> st { inProgress = true }
         else pure unit
 
+handleAction (KeyDown keyCode) = do
+    if keyCode == "Enter" 
+        then handleAction RequestSignIn 
+        else pure unit

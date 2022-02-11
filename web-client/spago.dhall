@@ -13,12 +13,20 @@ to generate this file without the comments in this block.
 { name = "my-project"
 , dependencies =
   [ "argonaut"
+  , "arrays"
   , "console"
+  , "dom-indexed"
   , "effect"
+  , "either"
+  , "foldable-traversable"
   , "halogen"
+  , "maybe"
   , "prelude"
   , "psci-support"
   , "tuples"
+  , "web-dom"
+  , "web-html"
+  , "web-uievents"
   ]
 , packages = ./packages.dhall
 , sources = [ "src/**/*.purs", "test/**/*.purs" ]

@@ -5,7 +5,8 @@ import Prelude
 
 import App (runAppT)
 import Assets (Assets)
-import Component (component)
+import SignIn (component)
+import Dict.EN (dict)
 import Data.Argonaut (Json, decodeJson, printJsonDecodeError)
 import Data.Either (Either(..))
 import Data.Foldable (sequence_)
@@ -38,7 +39,7 @@ runApp options = HA.runHalogenAff do
     body <- HA.awaitBody
     appContainer <- fromMaybe body <$> HA.selectElement (PN.QuerySelector options.appContainerSelector)
     liftEffect $ removeChildren (toParentNode appContainer)
-    let c = H.hoist runAppT $ component options.assets "Hello from Halogen"
+    let c = H.hoist runAppT $ component dict options.assets
     runUI c unit appContainer
 
 removeChildren :: PN.ParentNode -> Effect Unit

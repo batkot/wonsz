@@ -1,0 +1,50 @@
+.spinner {
+    @extend .spin;
+    background-image: url("./images/single-snake.png");
+    background-size: cover;
+    background-repeat: no-repeat;
+    filter: invert(100%);
+}
+
+.spin {
+    animation: spin 2s infinite linear;
+}
+
+@mixin square($size) {
+    height: $size;
+    width: $size;
+}
+
+@-moz-keyframes spin {
+    from { -moz-transform: rotate(0deg); }
+    to { -moz-transform: rotate(-360deg); }
+}
+@-webkit-keyframes spin {
+    from { -webkit-transform: rotate(0deg); }
+    to { -webkit-transform: rotate(-360deg); }
+}
+@keyframes spin {
+    from {transform:rotate(0deg);}
+    to {transform:rotate(-360deg);}
+}
+
+@mixin fade-in {
+    -webkit-animation: 0.3s fade-in ease-out;
+    -moz-animation: 0.3s fade-in ease-out;
+    animation: 0.3s fade-in ease-out;
+}
+
+@-moz-keyframes fade-in {
+    from { opacity: 0 }
+    to { opacity: 1 }
+}
+
+@-webkit-keyframes fade-in {
+    from { opacity: 0 }
+    to { opacity: 1 }
+}
+
+@keyframes fade-in {
+    from { opacity: 0 }
+    to { opacity: 1 }
+}

@@ -36,7 +36,7 @@ module.exports = {
                         options: {
                             spago: true,
                             src: config.pursSources,
-                            bundle: true
+                            bundle: false,
                         }
                     }
                 ]
