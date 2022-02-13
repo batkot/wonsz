@@ -1,8 +1,6 @@
 module Dict
     where
 
-import Prelude
-
 type Label = String
 
 type Dict = 
@@ -10,7 +8,3 @@ type Dict =
     , passwordPlaceholder :: Label
     , loginAction :: Label
     }
-
-class Monad m <= MonadDict m where
-    getDict :: m Dict
-

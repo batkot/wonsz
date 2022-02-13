@@ -6,11 +6,13 @@ import Prelude
 import App (runAppT)
 import Assets (Assets)
 import SignIn (component)
-import Dict.EN (dict)
+import Dict (Dict)
+import Dict.EN as EN
+import Dict.PL as PL
 import Data.Argonaut (Json, decodeJson, printJsonDecodeError)
 import Data.Either (Either(..))
 import Data.Foldable (sequence_)
-import Data.Maybe (fromMaybe)
+import Data.Maybe (Maybe(..), fromMaybe)
 import Effect (Effect)
 import Effect.Class (liftEffect)
 import Effect.Console as EC
@@ -26,6 +28,7 @@ import Web.HTML.HTMLElement (toParentNode)
 type AppOptions =
     { appContainerSelector :: String
     , assets :: Assets
+    , language :: String
     }
 
 main :: Json -> Effect Unit
@@ -39,10 +42,17 @@ runApp options = HA.runHalogenAff do
     body <- HA.awaitBody
     appContainer <- fromMaybe body <$> HA.selectElement (PN.QuerySelector options.appContainerSelector)
     liftEffect $ removeChildren (toParentNode appContainer)
-    let c = H.hoist runAppT $ component dict options.assets
+    let dict = matchDict options.language
+        c = H.hoist runAppT $ component dict options.assets
     runUI c unit appContainer
 
 removeChildren :: PN.ParentNode -> Effect Unit
 removeChildren parent = do
     children <- PN.children parent >>= HC.toArray
     sequence_ $ map (DE.toChildNode >>> CN.remove)  children
+
+matchDict :: String -> Dict
+matchDict "PL" = PL.dict
+matchDict "pl" = PL.dict
+matchDict _ = EN.dict
+

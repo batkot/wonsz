@@ -2,16 +2,17 @@ module App where
 
 import Prelude
 
+import Control.Monad.Reader (ReaderT, runReaderT)
+import Dict (Dict)
 import Effect.Class (class MonadEffect, liftEffect)
 import Effect.Console as EC
-
 import Logger (class MonadLogger)
 
 newtype AppT :: forall k. (k -> Type) -> k -> Type
 newtype AppT m a = AppT (m a)
 
 runAppT :: forall m a. AppT m a -> m a
-runAppT (AppT x) = x
+runAppT (AppT app) = app
 
 derive newtype instance appTFunctor :: Functor f => Functor (AppT f)
 derive newtype instance appTApply :: Apply m => Apply (AppT m)

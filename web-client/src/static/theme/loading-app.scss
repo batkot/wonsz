@@ -16,9 +16,8 @@
         text-align: center;
         display: block;
 
-        span.spinner {
-            @include square(100px);
-            display: inline-block;
+        .spinner {
+            height: 100px;
         }
     }
 }

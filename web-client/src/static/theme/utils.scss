@@ -1,8 +1,6 @@
 .spinner {
     @extend .spin;
-    background-image: url("./images/single-snake.png");
-    background-size: cover;
-    background-repeat: no-repeat;
+    height: 100%;
     filter: invert(100%);
 }
 

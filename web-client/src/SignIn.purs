@@ -7,6 +7,7 @@ import DOM.HTML.Indexed.InputType (InputType(..))
 import Data.Array as A
 import Data.Tuple (Tuple(..), fst, snd)
 import Dict (Dict)
+import HTML.Components (spinner)
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
@@ -44,19 +45,19 @@ component :: forall q i o m. Dict -> Assets -> H.Component q i o m
 component dict assets = 
     H.mkComponent 
         { initialState: \_ -> emptyState
-        , render: render dict assets.logoUrl
+        , render: render dict assets
         , eval: H.mkEval $ H.defaultEval { handleAction = handleAction }
         }
 
-render :: forall m. Dict -> String -> State -> H.ComponentHTML Action () m
-render dict logoUrl state =
+render :: forall m. Dict -> Assets -> State -> H.ComponentHTML Action () m
+render dict assets state =
     HH.div
         [ HP.class_ (HH.ClassName "login-page") ]
         [ HH.div 
             [ HP.class_ (HH.ClassName "login-component") ]
             [ HH.div
                 [ HP.class_ (HH.ClassName "logo") ]
-                [ HH.img [HP.src logoUrl] ]
+                [ HH.img [HP.src assets.logoUrl] ]
 
             , HH.input
                 [ HP.type_ InputText 
@@ -90,7 +91,7 @@ render dict logoUrl state =
         ]
     where
         logInBtnContent = if state.inProgress 
-            then HH.i [ HP.class_ (HH.ClassName "i-spinner") ] [] 
+            then spinner assets
             else HH.text dict.loginAction
 
 handleAction :: forall o m. Action -> H.HalogenM State Action () o m Unit

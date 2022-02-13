@@ -26,6 +26,13 @@ module.exports = {
                 test: /\.(png|jpg|jpeg|gif|svg)$/i,
                 type: 'asset/resource'
             },
+            //HTML
+            {
+                test: /\.html$/i,
+                use: {
+                    loader: 'html-loader'
+                }
+            },
             //PureScript
             {
                 test: /\.purs$/,
@@ -61,7 +68,8 @@ module.exports = {
         }),
         new Webpack.DefinePlugin({
             __APP_CONTAINER_SELECTOR__: "'#app'",
-            __ASSETS_BASE_PATH__: `'${config.assetsPath}'`
+            __ASSETS_BASE_PATH__: `'${config.assetsPath}'`,
+            __APP_LANG__: "'pl'",
         })
     ],
 

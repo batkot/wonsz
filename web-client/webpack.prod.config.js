@@ -30,7 +30,14 @@ module.exports = {
             //Images
             {
                 test: /\.(png|jpg|jpeg|gif|svg)$/i,
-                type: 'asset/resource'
+                type: 'asset'
+            },
+            //HTML
+            {
+                test: /\.html$/i,
+                use: {
+                    loader: 'html-loader'
+                }
             },
             //PureScript
             {
