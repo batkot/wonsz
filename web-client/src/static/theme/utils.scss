@@ -5,7 +5,8 @@
 }
 
 .spin {
-    animation: spin 2s infinite linear, opacity-1 2s linear infinite;
+    animation: spin 2s infinite linear;
+    // , opacity-1 2s linear infinite;
 }
 
 @mixin square($size) {

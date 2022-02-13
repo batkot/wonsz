@@ -12,7 +12,7 @@ import Dict.PL as PL
 import Data.Argonaut (Json, decodeJson, printJsonDecodeError)
 import Data.Either (Either(..))
 import Data.Foldable (sequence_)
-import Data.Maybe (Maybe(..), fromMaybe)
+import Data.Maybe (fromMaybe)
 import Effect (Effect)
 import Effect.Class (liftEffect)
 import Effect.Console as EC

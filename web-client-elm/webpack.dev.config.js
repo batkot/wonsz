@@ -92,7 +92,7 @@ module.exports = {
         inline: true,
         stats: 'errors-only',
         contentBase: path.join(__dirname, "src/static"),
-        port: 3001,
+        port: 3002,
         historyApiFallback: true
     }
 }
