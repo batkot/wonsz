@@ -7,7 +7,7 @@
 }
 
 .spin {
-    animation: spin 2s infinite linear;
+    animation: spin 2s infinite linear, opacity-1 2s linear infinite;
 }
 
 @mixin square($size) {
@@ -48,3 +48,13 @@
     from { opacity: 0 }
     to { opacity: 1 }
 }
+
+@mixin anim-opacity($name, $from, $to) {
+    @keyframes #{$name} {
+        0% { opacity: $from; }
+        50% { opacity: $to; }
+        100% { opacity: $from; }
+    }
+}
+
+@include anim-opacity('opacity-1', 1, 0.5);
