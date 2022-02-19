@@ -18,6 +18,7 @@ import Effect.Class (liftEffect)
 import Effect.Console as EC
 import Halogen as H
 import Halogen.Aff as HA
+import IO.Api as Api
 import Halogen.VDom.Driver (runUI)
 import Web.DOM.ChildNode as CN
 import Web.DOM.Element as DE
@@ -29,6 +30,7 @@ type AppOptions =
     { appContainerSelector :: String
     , assets :: Assets
     , language :: String
+    , apiUrl :: String
     }
 
 main :: Json -> Effect Unit
@@ -43,7 +45,8 @@ runApp options = HA.runHalogenAff do
     appContainer <- fromMaybe body <$> HA.selectElement (PN.QuerySelector options.appContainerSelector)
     liftEffect $ removeChildren (toParentNode appContainer)
     let dict = matchDict options.language
-        c = H.hoist runAppT $ component dict options.assets
+        appConfig = { apiUrl: Api.ApiUrl options.apiUrl }
+        c = H.hoist (runAppT appConfig) $ component dict options.assets
     runUI c unit appContainer
 
 removeChildren :: PN.ParentNode -> Effect Unit
@@ -55,4 +58,3 @@ matchDict :: String -> Dict
 matchDict "PL" = PL.dict
 matchDict "pl" = PL.dict
 matchDict _ = EN.dict
-

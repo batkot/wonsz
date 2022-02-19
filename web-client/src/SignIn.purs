@@ -5,8 +5,11 @@ import Prelude
 import Assets (Assets)
 import DOM.HTML.Indexed.InputType (InputType(..))
 import Data.Array as A
+import Data.Either (either)
+import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Tuple (Tuple(..), fst, snd)
 import Dict (Dict)
+import Effects.SignInMonad (class SignInMonad, signIn)
 import HTML.Components (spinner)
 import Halogen as H
 import Halogen.HTML as HH
@@ -18,6 +21,7 @@ type State =
     { username :: String
     , password :: String
     , inProgress :: Boolean
+    , error :: Maybe String
     }
 
 emptyState :: State
@@ -25,6 +29,7 @@ emptyState =
     { username: ""
     , password: ""
     , inProgress: false
+    , error: Nothing
     }
 
 data Action 
@@ -41,7 +46,7 @@ condClasses :: forall r i. Array (Tuple HH.ClassName Boolean) -> HH.IProp (class
 condClasses = 
     HP.classes <<< map fst <<< A.filter snd
 
-component :: forall q i o m. Dict -> Assets -> H.Component q i o m
+component :: forall q i o m. SignInMonad m => Dict -> Assets -> H.Component q i o m
 component dict assets = 
     H.mkComponent 
         { initialState: \_ -> emptyState
@@ -77,7 +82,7 @@ render dict assets state =
                 ]
             , HH.div
                 [ HP.class_ (HH.ClassName "login-error")]
-                []
+                [ HH.text $ fromMaybe "" state.error ]
             , HH.div
                 [ condClasses 
                     [ (Tuple (HH.ClassName "login-btn") true)
@@ -94,7 +99,7 @@ render dict assets state =
             then spinner assets
             else HH.text dict.loginAction
 
-handleAction :: forall o m. Action -> H.HalogenM State Action () o m Unit
+handleAction :: forall o m. SignInMonad m => Action -> H.HalogenM State Action () o m Unit
 handleAction (UsernameChanged  newUsername) =
     H.modify_ $ \st -> st { username = newUsername }
 
@@ -102,9 +107,12 @@ handleAction (PasswordChanged  newPassword) = do
     H.modify_ $ \st -> st { password = newPassword }
 
 handleAction RequestSignIn = do
-    loginAllowed <- H.gets canSignIn
-    if loginAllowed 
-        then H.modify_ $ \st -> st { inProgress = true }
+    state <- H.get
+    if canSignIn state
+        then do
+            H.modify_ $ \st -> st { inProgress = true }
+            signInResult <- H.lift $ signIn { username: state.username, password: state.password }
+            H.modify_ $ \st -> st { inProgress = false, error = either (\_ -> Just "Invalid Credentials") (\_ -> Nothing) signInResult }
         else pure unit
 
 handleAction (KeyDown keyCode) = do

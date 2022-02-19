@@ -70,6 +70,7 @@ module.exports = {
             __APP_CONTAINER_SELECTOR__: "'#app'",
             __ASSETS_BASE_PATH__: `'${config.assetsPath}'`,
             __APP_LANG__: "'pl'",
+            __API_URL__: "'http://localhost:8080'"
         })
     ],
 
