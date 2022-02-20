@@ -8,6 +8,7 @@ exports.requireAssets = basePath => {
 exports.environment = {
     appContainerSelector: __APP_CONTAINER_SELECTOR__,
     assetsBasePath: __ASSETS_BASE_PATH__,
+    appName: "Wonsz",
     apiUrl: __API_URL__,
     language: __APP_LANG__
 }

@@ -108,12 +108,10 @@ handleAction (PasswordChanged  newPassword) = do
 
 handleAction RequestSignIn = do
     state <- H.get
-    if canSignIn state
-        then do
-            H.modify_ $ \st -> st { inProgress = true }
-            signInResult <- H.lift $ signIn { username: state.username, password: state.password }
-            H.modify_ $ \st -> st { inProgress = false, error = either (\_ -> Just "Invalid Credentials") (\_ -> Nothing) signInResult }
-        else pure unit
+    when (canSignIn state) $ do
+        H.modify_ $ \st -> st { inProgress = true }
+        signInResult <- H.lift $ signIn { username: state.username, password: state.password }
+        H.modify_ $ \st -> st { inProgress = false, error = either (\_ -> Just "Invalid Credentials") (\_ -> Nothing) signInResult }
 
 handleAction (KeyDown keyCode) = do
     if keyCode == "Enter" 

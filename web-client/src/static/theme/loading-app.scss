@@ -23,5 +23,9 @@
         .spinner {
             height: 100px;
         }
+
+        &.longer-than-expected {
+            animation-delay: 10s;
+        }
     }
 }

@@ -33,5 +33,5 @@ instance consoleLogMonadAppT :: MonadEffect m => MonadLogger (AppT m) where
 instance signInMonadAppT :: MonadAff m => SignInMonad (AppT m) where
     signIn req = AppT $ do
        { apiUrl } <- ask
-       -- liftAff $ Api.signIn apiUrl req
-       pure $ Right $ SessionToken "Totally Legit Token"
+       liftAff $ Api.signIn apiUrl req
+       -- pure $ Right $ SessionToken "Totally Legit Token"
