@@ -9,12 +9,14 @@ import Data.Either (either)
 import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Tuple (Tuple(..), fst, snd)
 import Dict (Dict)
+import Effects.Navigation (class NavigationMonad, navigate)
 import Effects.SignInMonad (class SignInMonad, signIn)
 import HTML.Components (spinner)
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
+import Routes as R
 import Web.UIEvent.KeyboardEvent (code)
 
 type State = 
@@ -46,7 +48,13 @@ condClasses :: forall r i. Array (Tuple HH.ClassName Boolean) -> HH.IProp (class
 condClasses = 
     HP.classes <<< map fst <<< A.filter snd
 
-component :: forall q i o m. SignInMonad m => Dict -> Assets -> H.Component q i o m
+component 
+    :: forall q i o m
+     . SignInMonad m 
+    => NavigationMonad m
+    => Dict 
+    -> Assets 
+    -> H.Component q i o m
 component dict assets = 
     H.mkComponent 
         { initialState: \_ -> emptyState
@@ -99,7 +107,13 @@ render dict assets state =
             then spinner assets
             else HH.text dict.loginAction
 
-handleAction :: forall o m. SignInMonad m => Action -> H.HalogenM State Action () o m Unit
+handleAction 
+    :: forall o m
+     . SignInMonad m 
+    => NavigationMonad m
+    => Action 
+    -> H.HalogenM State Action () o m Unit
+
 handleAction (UsernameChanged  newUsername) =
     H.modify_ $ \st -> st { username = newUsername }
 
@@ -111,7 +125,8 @@ handleAction RequestSignIn = do
     when (canSignIn state) $ do
         H.modify_ $ \st -> st { inProgress = true }
         signInResult <- H.lift $ signIn { username: state.username, password: state.password }
-        H.modify_ $ \st -> st { inProgress = false, error = either (\_ -> Just "Invalid Credentials") (\_ -> Nothing) signInResult }
+        H.lift $ navigate R.Dashboard
+        --H.modify_ $ \st -> st { inProgress = false, error = either (\_ -> Just "Invalid Credentials") (\_ -> Nothing) signInResult }
 
 handleAction (KeyDown keyCode) = do
     if keyCode == "Enter" 

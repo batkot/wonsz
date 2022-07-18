@@ -50,7 +50,7 @@ runApp options = HA.runHalogenAff do
     liftEffect $ removeChildren (toParentNode appContainer)
     hash <- liftEffect getHash
     liftEffect $ EC.log $ "Hash: " <> hash
-    startRoute <- liftEffect $ fromMaybe R.NotFound <<< hush <<< parse R.codec <$> getHash
+    startRoute <- liftEffect $ fromMaybe R.Dashboard <<< hush <<< parse R.codec <$> getHash
     liftEffect $ EC.log $ "Route: " <> (print R.codec startRoute)
     let dict = matchDict options.language
         appConfig = { apiUrl: Api.ApiUrl options.apiUrl }

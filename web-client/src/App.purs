@@ -8,8 +8,12 @@ import Effect.Aff.Class (class MonadAff, liftAff)
 import Effect.Class (class MonadEffect, liftEffect)
 import Effect.Console as EC
 import Effects.SignInMonad (class SignInMonad, SessionToken(..))
+import Effects.Navigation (class NavigationMonad)
 import IO.Api as Api
 import Logger (class MonadLogger)
+import Routing.Hash (setHash)
+import Routing.Duplex (print)
+import Routes (codec)
 
 type AppConfig =
     { apiUrl :: Api.ApiUrl
@@ -35,3 +39,10 @@ instance signInMonadAppT :: MonadAff m => SignInMonad (AppT m) where
        { apiUrl } <- ask
        liftAff $ Api.signIn apiUrl req
        -- pure $ Right $ SessionToken "Totally Legit Token"
+
+instance navigationMonadAppT :: MonadEffect m => NavigationMonad (AppT m) where
+    navigate route = 
+        AppT $ liftEffect $ setHash hash
+      where
+        hash :: String
+        hash = print codec route
